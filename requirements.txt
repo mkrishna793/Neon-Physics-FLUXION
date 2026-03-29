@@ -1,0 +1,16 @@
+# FLUXION Requirements
+# Physics-Native Silicon Intelligence
+
+# Core dependencies
+numpy>=1.20.0
+
+# Optional dependencies for GPU acceleration
+# Uncomment if you have OpenCL support
+# pyopencl>=2021.1
+
+# Development dependencies
+# pytest>=6.0
+# pytest-cov>=2.0
+# black>=21.0
+# isort>=5.0
+# mypy>=0.900
