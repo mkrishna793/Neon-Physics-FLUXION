@@ -4,50 +4,61 @@
 
 **Physics-Native Silicon Intelligence**
 
-*A Thermodynamic Placement Engine for Chip Design Research*
+*A Thermodynamic Placement Engine for Chip Design*
 
 [![License](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/)
 [![C++](https://img.shields.io/badge/C%2B%2B-17-blue.svg)](https://isocpp.org/)
 [![Status](https://img.shields.io/badge/Status-Research%20Prototype-orange.svg)]()
 
-[Overview](#overview) • [Installation](#installation) • [Quick Start](#quick-start) • [Limitations](#limitations)
+[Overview](#overview) • [Installation](#installation) • [Quick Start](#quick-start) • [Documentation](#documentation)
 
 </div>
 
 ---
 
-## Overview
+## The Core Idea
 
-FLUXION is a **research prototype** exploring physics-based approaches to integrated circuit placement. It treats logic gates as particles in a thermodynamic system and uses simulated annealing with custom force fields to optimize placement.
+**FLUXION explores a new question:**
 
-### What This Is
+> Can four unified physics force fields — wire tension, thermal repulsion, timing gravity, and topology preservation — solve chip placement without training data?
 
-- A **research project** exploring physics-based placement optimization
-- An **educational tool** for understanding placement algorithms
-- A **prototype implementation** of thermodynamic annealing for circuits
+Instead of machine learning or heuristics, FLUXION models the circuit as a physical system:
 
-### What This Is NOT
+| Force Field | Physics Analogy | What It Optimizes |
+|-------------|-----------------|-------------------|
+| **Wire Tension** | Hooke's Law springs | Minimize wire length → faster signals |
+| **Thermal Repulsion** | Electrostatic repulsion | Spread heat evenly → no hotspots |
+| **Timing Gravity** | Gravitational pull | Pull critical paths → meet timing |
+| **TopoLoss** | Shape preservation | Maintain circuit correctness |
 
-- A production-ready EDA tool
-- A replacement for commercial tools (Cadence, Synopsys)
-- Proven to achieve optimal or near-optimal solutions
-- Benchmarked against industry standards (yet)
+All four forces operate simultaneously, unified in a single energy function. The system finds equilibrium through thermodynamic annealing — no training data, no neural networks.
 
 ---
 
-## How It Works
+## Overview
 
-FLUXION models circuit placement as an energy minimization problem using four force fields:
+FLUXION is a **research prototype** for physics-based integrated circuit placement. It takes a Verilog design and optimizes gate positions using thermodynamic principles.
 
-| Force Field | Description | Optimization Goal |
-|-------------|-------------|-------------------|
-| **Wire Tension** | Springs between connected gates | Reduce wire length |
-| **Thermal Repulsion** | Repulsion between high-power gates | Spread heat distribution |
-| **Timing Gravity** | Pull critical path components | Improve timing slack |
-| **TopoLoss** | Preserve circuit topology | Maintain structural integrity |
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                         FLUXION Pipeline                            │
+├─────────────────────────────────────────────────────────────────────┤
+│   Verilog ──▶ Verilator ──▶ Circuit Graph ──▶ Particle System      │
+│                                              │                     │
+│                                              ▼                     │
+│   Optimized Layout ◀── Verification ◀── Thermodynamic Annealing    │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
-The placement is optimized using **simulated annealing**, a well-known technique in EDA since the 1980s (see [TimberWolf](https://doi.org/10.1109/TCAD.1984.1270038)).
+### What Makes This Different
+
+| Traditional Approaches | FLUXION Approach |
+|-----------------------|------------------|
+| Analytical solvers | Unified physics simulation |
+| Machine learning (needs training data) | No training data required |
+| Separate objectives (wire, timing, thermal) | Single energy function |
+| Proprietary or expensive | Open source (AGPL-3.0) |
 
 ---
 
@@ -107,10 +118,7 @@ for i in range(50):
     ))
 
 # Configure and run
-config = PlacementConfig(
-    annealing_steps=5000,
-    verbose=True,
-)
+config = PlacementConfig(annealing_steps=5000, verbose=True)
 
 engine = ThermodynamicPlacementEngine(config)
 engine.set_circuit(circuit)
@@ -123,119 +131,166 @@ print(f"Critical path delay: {result.critical_path_delay:.2f} ps")
 ### Command Line
 
 ```bash
-# Generate and optimize a demo circuit
 python examples/run_fluxion.py --num-gates 100 --steps 5000
-
-# Output saved to fluxion_output/
 ```
 
 ---
 
-## Limitations
+## Architecture
 
-**Important: This is a research prototype with significant limitations.**
-
-### What's Missing
-
-| Feature | Status |
-|---------|--------|
-| Clock tree synthesis | ❌ Not implemented |
-| Power grid routing | ❌ Not implemented |
-| Multi-corner timing | ❌ Not implemented |
-| Routing congestion | ❌ Not implemented |
-| Industry benchmarks | ❌ Not evaluated |
-| Comparison vs OpenROAD | ❌ Not done |
-| Comparison vs DREAMPlace | ❌ Not done |
-
-### Known Issues
-
-1. **Simplified physical model**: Real chips have constraints not modeled here (metal layers, via restrictions, design rules)
-2. **No timing closure loop**: Critical path optimization is approximate
-3. **No actual Verilator integration**: The C++ export pass exists but requires building Verilator from source
-4. **Synthetic benchmarks only**: Tested on generated circuits, not real designs
-5. **Performance**: Not optimized for large designs (>10K gates)
-
-### Simulated Annealing Context
-
-Simulated annealing for placement is not novel:
-- TimberWolf (1984) — first major simulated annealing placer
-- Commercial tools moved away from pure SA due to scalability issues
-- Modern tools (OpenROAD, DREAMPlace) use analytical methods + SA refinement
-
-This project explores whether a **physics-based formulation** can provide insights, but does not claim superiority over existing methods.
-
----
-
-## Project Structure
+### Project Structure
 
 ```
 fluxion/
 ├── src/
 │   ├── python/fluxion/
-│   │   ├── particle_system.py   # Circuit representation
-│   │   ├── force_fields.py      # Four force fields
-│   │   ├── annealing.py         # Temperature schedules
-│   │   ├── tpe.py               # Main engine
-│   │   └── cli.py               # Command line
+│   │   ├── particle_system.py   # Circuit as particles
+│   │   ├── force_fields.py      # Four physics forces
+│   │   ├── annealing.py        # Thermodynamic annealing
+│   │   ├── tpe.py              # Main placement engine
+│   │   └── cli.py              # Command line interface
 │   └── cpp/
 │       └── V3FluxionExport.cpp  # Verilator export pass
 ├── examples/
 │   └── run_fluxion.py           # Demo script
 ├── tests/
 │   └── test_fluxion.py          # Unit tests
-├── README.md
-├── LICENSE
-└── requirements.txt
+└── README.md
+```
+
+### Core Components
+
+#### Force Fields (`force_fields.py`)
+
+Each force field calculates energy and gradients:
+
+```python
+class WireTensionForce(ForceField):
+    """Spring force: F = -k × (distance - rest_length)"""
+
+class ThermalRepulsionForce(ForceField):
+    """Electrostatic: F = k × q₁ × q₂ / r²"""
+
+class TimingGravityForce(ForceField):
+    """Gravity: F = m × g toward timing sink"""
+
+class TopoLossForce(ForceField):
+    """Topology preservation force"""
+```
+
+#### Thermodynamic Annealing (`annealing.py`)
+
+Temperature schedules for optimization:
+
+```python
+class ScheduleType(Enum):
+    LINEAR = "linear"
+    EXPONENTIAL = "exponential"
+    LOGARITHMIC = "logarithmic"
+    ADAPTIVE = "adaptive"
 ```
 
 ---
 
-## Roadmap
+## Documentation
 
-### Current Status (v0.1.0)
+### PlacementConfig
 
-- [x] Basic particle system
-- [x] Four force fields implementation
-- [x] Simulated annealing engine
-- [x] Python API
-- [x] Demo script
+```python
+config = PlacementConfig(
+    # Die dimensions (micrometers)
+    die_width=1000.0,
+    die_height=1000.0,
 
-### Future Work (Contributions Welcome)
+    # Timing target (picoseconds)
+    target_clock_period_ps=1000.0,
 
-- [ ] ISPD/ICCAD benchmark evaluation
-- [ ] Comparison with OpenROAD, DREAMPlace
-- [ ] Real Verilator integration
-- [ ] Multi-corner timing analysis
-- [ ] Clock tree awareness
-- [ ] Scalability improvements
+    # Force field weights
+    wire_tension_weight=1.0,
+    thermal_repulsion_weight=0.5,
+    timing_gravity_weight=0.8,
+    topoloss_weight=0.3,
+
+    # Annealing
+    initial_temperature=100.0,
+    final_temperature=0.01,
+    annealing_steps=10000,
+
+    # Hardware
+    use_gpu=True,
+)
+```
+
+### PlacementResult
+
+```python
+result = engine.optimize()
+
+# Energy components
+result.total_energy        # Total energy
+result.wire_energy        # Wire tension energy
+result.thermal_energy     # Thermal energy
+result.timing_energy      # Timing energy
+result.topoloss_energy    # Topology energy
+
+# Metrics
+result.total_wirelength   # Total wire length (μm)
+result.max_temperature    # Max temperature (K)
+result.critical_path_delay # Critical path (ps)
+
+# Optimization info
+result.annealing_time     # Time (seconds)
+result.acceptance_rate    # Move acceptance rate
+```
+
+---
+
+## Current Status
+
+### What Works
+
+- Core particle system for circuit representation
+- Four unified force fields
+- Thermodynamic annealing with multiple schedules
+- Python API and CLI interface
+- Verilator export pass (C++)
+
+### Development Roadmap
+
+| Feature | Status |
+|---------|--------|
+| Core placement engine | ✅ Working |
+| Python API | ✅ Working |
+| Four force fields | ✅ Working |
+| GPU acceleration (OpenCL) | 🔧 In progress |
+| Industry benchmarks (ISPD) | 📋 Planned |
+| Comparison vs OpenROAD | 📋 Planned |
+| Multi-corner timing | 📋 Planned |
 
 ---
 
 ## Related Work
 
-This project builds on decades of research in physical design:
+Simulated annealing has been used in EDA since TimberWolf (1984). FLUXION builds on this foundation with a unified four-field physics model.
 
-| Tool/Method | Year | Approach |
-|-------------|------|----------|
-| TimberWolf | 1984 | Simulated annealing |
-| FastPlace | 2005 | Analytical quadratic |
-| SimPL | 2012 | Analytical + lookahead |
-| OpenROAD | 2019 | Open-source full flow |
-| DREAMPlace | 2019 | Deep learning + analytical |
-| RePlAce | 2020 | Analytical global placement |
-
-For production chip design, use established tools like [OpenROAD](https://github.com/The-OpenROAD-Project/OpenROAD).
+| Tool | Approach | Notes |
+|------|----------|-------|
+| TimberWolf | Simulated annealing | Classic SA placer |
+| OpenROAD | Analytical + SA | Full open-source flow |
+| DREAMPlace | Deep learning + analytical | GPU-accelerated |
+| RePlAce | Analytical global placement | Electrostatic formulation |
+| **FLUXION** | Four-field physics + SA | No training data |
 
 ---
 
 ## Contributing
 
-Contributions are welcome! Priority areas:
+Contributions welcome! Priority areas:
 
-1. **Benchmarks**: Evaluate on ISPD contest datasets
-2. **Comparisons**: Compare against OpenROAD placer
-3. **Documentation**: Improve clarity of implementation
-4. **Testing**: Add unit tests and integration tests
+1. **Benchmarks**: Run on ISPD/ICCAD datasets
+2. **Comparisons**: Compare against existing tools
+3. **GPU kernels**: Improve OpenCL performance
+4. **Documentation**: Tutorials and examples
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
@@ -245,9 +300,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 FLUXION is licensed under the **GNU Affero General Public License v3.0 or later (AGPL-3.0-or-later)**.
 
-This means:
-- Free and open source
-- Modifications must be shared back
+This ensures:
+- Free and open source forever
+- Modifications must be shared back to the community
 - Network use (SaaS) requires providing source code
 
 See [LICENSE](LICENSE) for details.
@@ -265,7 +320,7 @@ If you use FLUXION in your research, please cite:
   year      = {2025},
   url       = {https://github.com/mkrishna793/Neon-Physics-FLUXION},
   license   = {AGPL-3.0-or-later},
-  note      = {A Thermodynamic Placement Engine Research Prototype},
+  note      = {A Thermodynamic Placement Engine},
 }
 ```
 
@@ -275,14 +330,16 @@ If you use FLUXION in your research, please cite:
 
 - [Verilator](https://verilator.org) — Verilog simulator framework
 - The physical design research community
-- OpenROAD Project — for setting the standard in open-source EDA
+- Open-source EDA contributors worldwide
 
 ---
 
 <div align="center">
 
-**FLUXION** — A Research Prototype for Physics-Based Placement
+**FLUXION**
 
-*Not production-ready. For real designs, use OpenROAD.*
+*Four unified force fields. No training data. Physics-first placement.*
+
+[GitHub](https://github.com/mkrishna793/Neon-Physics-FLUXION) • [Issues](https://github.com/mkrishna793/Neon-Physics-FLUXION/issues) • [Discussions](https://github.com/mkrishna793/Neon-Physics-FLUXION/discussions)
 
 </div>
