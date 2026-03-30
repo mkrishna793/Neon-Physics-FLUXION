@@ -42,7 +42,7 @@ class VerilatorVerifyLoop:
             with open(optimized_json, 'r') as f:
                 data = json.load(f)
                 
-            particles = data.get('particles', [])
+            particles = data.get('particles', data.get('nodes', []))
             if not particles:
                 logging.warning("No particles found in exported layout.")
                 

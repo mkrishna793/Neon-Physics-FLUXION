@@ -260,57 +260,43 @@ fluxion/
 ## Force Fields Deep Dive
 
 ### 1. Wire Tension Force
-
 Models connections as springs following Hooke's Law:
 
-```
-F_wire = -k × (|r₁ - r₂| - L₀) × r̂₁₂
+$$F_{wire} = -k \cdot (|r_1 - r_2| - L_0) \cdot \hat{r}_{12}$$
 
 where:
-  k = spring constant (wire tension weight)
-  L₀ = rest length (minimum wire length)
-  r̂₁₂ = unit vector between connected gates
-```
+* $k$ = spring constant (wire tension weight)
+* $L_0$ = rest length (minimum wire length)
+* $\hat{r}_{12}$ = unit vector between connected gates
 
 **Effect:** Connected gates attract each other → shorter wires → faster signals → less power.
 
 ### 2. Thermal Repulsion Force
-
 Models high-power gates as charged particles:
 
-```
-F_thermal = k × P₁ × P₂ / |r₁ - r₂|²
+$$F_{thermal} = k \frac{P_1 P_2}{|r_1 - r_2|^2}$$
 
 where:
-  P₁, P₂ = power dissipation of gates
-  k = thermal coupling constant
-```
+* $P_1, P_2$ = power dissipation of gates
+* $k$ = thermal coupling constant
 
 **Effect:** High-power gates repel → heat spreads evenly → no thermal hotspots.
 
 ### 3. Timing Gravity Force
-
 Pulls critical path components toward timing targets:
 
-```
-F_timing = G × m × ∇T
+$$F_{timing} = G \cdot m \cdot \nabla T$$
 
 where:
-  m = gate delay (mass analog)
-  T = timing potential field
-```
+* $m$ = gate delay (mass analog)
+* $\nabla T$ = timing potential field
 
 **Effect:** Critical paths get priority → timing constraints satisfied.
 
 ### 4. TopoLoss Force
-
 Preserves circuit topology during optimization:
 
-```
-F_topo = -∂E_topology/∂r
-
-E_topology = Σ (structure penalties)
-```
+$$F_{topo} = -\nabla E_{topology}$$
 
 **Effect:** Circuit maintains logical correctness throughout optimization.
 
