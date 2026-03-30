@@ -144,6 +144,26 @@ For more information, visit: https://github.com/fluxion-project/fluxion
         help="Original circuit file for comparison",
     )
 
+    # Verify command (Phase 8 logic structural integrity)
+    verify_parser = subparsers.add_parser(
+        "verify",
+        help="Run Phase 8 Verilator validation",
+        description="Verify layout logic remains unbroken by checking output against original Verilog",
+    )
+    verify_parser.add_argument("optimized_json", type=str, help="Optimized placement result (JSON)")
+    verify_parser.add_argument(
+        "--original",
+        type=str,
+        required=True,
+        help="Original Verilog (.v) file",
+    )
+    verify_parser.add_argument(
+        "--verilator-path",
+        type=str,
+        default="verilator",
+        help="Path to verilator executable",
+    )
+
     # Generate command
     generate_parser = subparsers.add_parser(
         "generate",
@@ -318,6 +338,21 @@ def cmd_validate(args) -> int:
     return 0
 
 
+def cmd_verify(args) -> int:
+    """Run the verify command (Phase 8)."""
+    from .verify import VerilatorVerifyLoop
+    print(f"Verifying {args.optimized_json} against {args.original}")
+    verifier = VerilatorVerifyLoop(verilator_path=args.verilator_path)
+    success = verifier.verify_topology(args.original, args.optimized_json)
+    if success:
+        return 0
+    else:
+        print("Verification failed!", file=sys.stderr)
+        return 1
+
+
+
+
 def cmd_generate(args) -> int:
     """Run the generate command."""
     import numpy as np
@@ -458,6 +493,7 @@ def main() -> int:
         "optimize": cmd_optimize,
         "analyze": cmd_analyze,
         "validate": cmd_validate,
+        "verify": cmd_verify,
         "generate": cmd_generate,
         "info": cmd_info,
     }

@@ -17,6 +17,7 @@ from typing import Dict, List, Tuple, Optional
 from dataclasses import dataclass
 
 from .particle_system import FluxionParticleSystem, FluxionParticle
+from .percolation import ThermalPercolationChecker
 
 
 @dataclass
@@ -237,6 +238,7 @@ class ThermalRepulsionForce(ForceField):
         super().__init__("ThermalRepulsion", weight)
         self.thermal_constant = thermal_constant
         self.min_distance = min_distance
+        self.percolation_checker = ThermalPercolationChecker()
 
     def calculate(self, system: FluxionParticleSystem) -> ForceResult:
         """Calculate thermal repulsion forces on all particles."""
@@ -245,53 +247,50 @@ class ThermalRepulsionForce(ForceField):
         total_energy = 0.0
         max_force = 0.0
 
+        # -------- VECTORIZED N^2 --------
+        if n == 0:
+            return ForceResult(
+                forces=forces * self.weight,
+                energy=0.0,
+                max_force=0.0,
+                force_details={'max_temperature': 0, 'percolation_risk': 0.0, 'is_percolating': False}
+            )
+
         particles = list(system.particles.values())
+        positions = np.array([[p.x, p.y] for p in particles])
+        powers = np.array([p.power_pw for p in particles])
+        q = np.sqrt(powers + 1)
 
-        # Thermal repulsion is pairwise - O(n^2) but can be optimized
-        # with spatial hashing or Barnes-Hut approximation for large circuits
-        for i in range(n):
-            for j in range(i + 1, n):
-                p_i = particles[i]
-                p_j = particles[j]
+        diffs = positions[np.newaxis, :, :] - positions[:, np.newaxis, :]  # Shape: (N, N, 2)
+        dist_sq = np.sum(diffs**2, axis=2)
+        
+        # Set diagonal to infinity to avoid self-repulsion division by zero
+        np.fill_diagonal(dist_sq, np.inf)
 
-                # Calculate distance
-                dx = p_j.x - p_i.x
-                dy = p_j.y - p_i.y
-                distance = np.sqrt(dx**2 + dy**2)
+        dist = np.sqrt(dist_sq)
+        dist = np.maximum(dist, self.min_distance)
 
-                # Apply minimum distance to avoid singularity
-                distance = max(distance, self.min_distance)
+        q_prod = q[:, np.newaxis] * q[np.newaxis, :]
+        force_mag = self.thermal_constant * q_prod / (dist**2)
 
-                # Thermal "charge" proportional to power
-                q_i = np.sqrt(p_i.power_pw + 1)  # +1 to avoid zero
-                q_j = np.sqrt(p_j.power_pw + 1)
+        # Force direction: -diffs / dist
+        forces[:, 0] = -np.sum(force_mag * diffs[:, :, 0] / dist, axis=1)
+        forces[:, 1] = -np.sum(force_mag * diffs[:, :, 1] / dist, axis=1)
 
-                # Force magnitude: F = k * q1 * q2 / r^2
-                force_magnitude = self.thermal_constant * q_i * q_j / (distance**2)
+        total_energy = np.sum(self.thermal_constant * q_prod / dist) / 2.0
+        max_force = np.max(force_mag) if n > 1 else 0.0
 
-                # Unit vector from i to j
-                ux = dx / distance
-                uy = dy / distance
-
-                # Repulsion: push particles apart
-                # Force on i (away from j)
-                forces[i, 0] -= force_magnitude * ux
-                forces[i, 1] -= force_magnitude * uy
-
-                # Force on j (away from i)
-                forces[j, 0] += force_magnitude * ux
-                forces[j, 1] += force_magnitude * uy
-
-                # Energy: k * q1 * q2 / r
-                total_energy += self.thermal_constant * q_i * q_j / distance
-
-                max_force = max(max_force, force_magnitude)
+        perc_result = self.percolation_checker.analyze(system)
 
         return ForceResult(
             forces=forces * self.weight,
             energy=total_energy * self.weight,
             max_force=max_force * self.weight,
-            force_details={'max_temperature': system.max_temperature()}
+            force_details={
+                'max_temperature': system.max_temperature(),
+                'percolation_risk': perc_result.percolation_risk,
+                'is_percolating': perc_result.is_percolating
+            }
         )
 
     def calculate_energy(self, system: FluxionParticleSystem) -> float:
@@ -300,19 +299,22 @@ class ThermalRepulsionForce(ForceField):
         particles = list(system.particles.values())
         n = len(particles)
 
-        for i in range(n):
-            for j in range(i + 1, n):
-                p_i = particles[i]
-                p_j = particles[j]
+        if n < 2:
+            return 0.0
+            
+        positions = np.array([[p.x, p.y] for p in particles])
+        powers = np.array([p.power_pw for p in particles])
+        q = np.sqrt(powers + 1)
 
-                dx = p_j.x - p_i.x
-                dy = p_j.y - p_i.y
-                distance = max(np.sqrt(dx**2 + dy**2), self.min_distance)
+        diffs = positions[np.newaxis, :, :] - positions[:, np.newaxis, :]
+        dist_sq = np.sum(diffs**2, axis=2)
+        np.fill_diagonal(dist_sq, np.inf)
 
-                q_i = np.sqrt(p_i.power_pw + 1)
-                q_j = np.sqrt(p_j.power_pw + 1)
+        dist = np.sqrt(dist_sq)
+        dist = np.maximum(dist, self.min_distance)
 
-                total_energy += self.thermal_constant * q_i * q_j / distance
+        q_prod = q[:, np.newaxis] * q[np.newaxis, :]
+        total_energy = np.sum(self.thermal_constant * q_prod / dist) / 2.0
 
         return total_energy * self.weight
 
