@@ -225,6 +225,22 @@ def main():
         help="Suppress output",
     )
     parser.add_argument(
+        "--legalize",
+        action="store_true",
+        help="Run hybrid legalizer after placement",
+    )
+    parser.add_argument(
+        "--def-output",
+        action="store_true",
+        help="Export placement to DEF format",
+    )
+    parser.add_argument(
+        "--tech-node",
+        type=str,
+        default="7nm",
+        help="Tech node for grid",
+    )
+    parser.add_argument(
         "--seed",
         type=int,
         default=42,
@@ -255,6 +271,9 @@ def main():
         random_seed=args.seed,
         use_gpu=args.gpu,
         verbose=not args.quiet,
+        legalize=args.legalize,
+        output_def=args.def_output,
+        tech_node=args.tech_node,
     )
 
     # Run optimization
@@ -282,6 +301,14 @@ def main():
                    f"{particle.x:.4f},{particle.y:.4f}\n")
     print(f"  Positions: {positions_file}")
 
+    if result.def_file_path:
+        import os
+        import shutil
+        dest = output_dir / "placement.def"
+        if os.path.exists(result.def_file_path):
+            shutil.move(result.def_file_path, str(dest))
+            print(f"  DEF Export: {dest}")
+
     # Summary
     print("\n" + "=" * 60)
     print("FLUXION Placement Summary")
@@ -292,6 +319,16 @@ def main():
     print(f"Max Temperature: {result.max_temperature:.2f} K")
     print(f"Critical Path Delay: {result.critical_path_delay:.2f} ps")
     print(f"Optimization Time: {result.annealing_time:.2f} s")
+    
+    if result.legalizer_stats:
+        print("-" * 60)
+        s = result.legalizer_stats
+        print("Legalization Results:")
+        print(f"  Tetris placed: {s['tetris_success']}")
+        print(f"  Z3 resolved:   {s['z3_resolved']}")
+        print(f"  Failed:        {s['failed_illegal']}")
+        print(f"  Legalize Time: {s['time_s']:.2f} s")
+        
     print("=" * 60)
 
     return 0

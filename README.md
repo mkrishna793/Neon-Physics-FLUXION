@@ -17,6 +17,15 @@
 
 ---
 
+## 🚀 NEW in V2: True Physical Synthesis
+FLUXION V2 evolves from a Python prototype into a **production-grade Physical Synthesis engine**, featuring:
+- 🏎️ **Million-Gate Scalability**: $O(N \log N)$ Barnes-Hut quadtrees and FFT-based Electrostatic Smoothing.
+- 📐 **Hybrid Legalizer**: Fast Tetris placement + Z3 SAT exact solver for congested area legalizations across 3nm/7nm nodes.
+- 🏭 **DEF Export**: Auto-export to foundry-ready `.def` databases mapped to Database Units (DBU).
+- ⚙️ **C++ Native Core**: Full physics engine is embedded inside Verilator's AST pipeline via OpenMP.
+
+---
+
 ## Watch It Work
 
 <div align="center">
@@ -72,7 +81,14 @@ Instead of machine learning that requires massive datasets, FLUXION models circu
 │      F = -∇E_topology                                          │
 │      → Maintains circuit correctness                            │
 │                                                                 │
-│   Total Energy = E_wire + E_thermal + E_timing + E_topo        │
+│   5. ELECTROSTATIC SMOOTHING (ePlace via FFT)                  │
+│      ∇²φ = -ρ  →  F = -∇φ                                      │
+│      → Spreads millions of gates globally                      │
+│                                                                 │
+│   6. DENSITY EQUALIZATION                                      │
+│      → Local uniformness to prevent routing congestion         │
+│                                                                 │
+│   Total Energy = E_wire + E_thermal + E_timing + E_topo ...    │
 │                                                                 │
 │   Annealing finds the GLOBAL ENERGY MINIMUM                    │
 │                                                                 │
@@ -171,8 +187,11 @@ pip install -e .
 # Generate and optimize a demo circuit (40 gates)
 python examples/run_fluxion.py --num-gates 40 --steps 5000
 
-# Create the animation GIF
-python examples/animate_placement.py
+# Run the Million-Gate Benchmark (V2 Barnes-Hut Scalability Test)
+python examples/run_million_gates.py --gates 100000
+
+# Full flow: Optimize -> Legalize (Tetris+Z3) -> Export DEF
+python examples/run_fluxion.py --num-gates 1000 --legalize --def-output
 ```
 
 ### Python API
@@ -361,15 +380,15 @@ FLUXION's novelty: **Unified four-field physics model** where wire, thermal, tim
 | Component | Status |
 |-----------|--------|
 | Core particle system | ✅ Working |
-| Four force fields | ✅ Working |
+| Six force fields (V2 addition) | ✅ Working |
 | Thermodynamic annealing | ✅ Working |
-| Python API | ✅ Working |
-| CLI interface | ✅ Working |
-| Animation generator | ✅ Working |
-| Verilator export pass | ✅ Implemented |
+| Python API & CLI interface | ✅ Working |
+| Hybrid Legalizer (Tetris + Z3) | ✅ Working |
+| DEF Generation Pipeline | ✅ Working |
+| Verilator C++ Physics inside Pass | ✅ Working (OpenMP) |
+| Barnes-Hut & FFT Solvers | ✅ Working |
 | GPU acceleration | 🔧 In progress |
 | Industry benchmarks | 📋 Planned |
-| OpenROAD comparison | 📋 Planned |
 
 ---
 

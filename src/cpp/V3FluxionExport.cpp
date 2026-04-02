@@ -12,6 +12,7 @@
 //*************************************************************************
 
 #include "V3FluxionExport.h"
+#include "FluxionEngine.h"
 
 #include "V3Ast.h"
 #include "V3Global.h"
@@ -135,6 +136,21 @@ void FluxionGraph::computeStatistics() {
 }
 
 void FluxionGraph::identifyCriticalPaths() {
+    // ------------------------------------------------------------------------
+    // Note: The physical synthesis engine now handles placement, so we no
+    // longer assign random coordinates here. The layout is determined
+    // by actual forces simulating thermodynamic physics.
+    // ------------------------------------------------------------------------
+    
+    // Just estimate properties
+    for (auto& pair : nodes) {
+        FluxionNode& node = pair.second;
+        node.delay = V3FluxionExport::estimateGateDelay(node.type);
+        node.area = V3FluxionExport::estimateGateArea(node.type);
+        node.power = V3FluxionExport::estimateGatePower(node.type);
+        node.heatGeneration = node.power * 0.8; // Assume 80% goes to heat
+    }
+
     // Identify timing-critical paths using BFS from primary inputs
     // to primary outputs, tracking delay accumulation
 
@@ -597,12 +613,24 @@ void V3FluxionExport::exportCircuit(AstNetlist* netlistp, const std::string& out
     // Identify critical paths
     graph.identifyCriticalPaths();
 
-    // Randomize initial positions
-    std::srand(42); // Deterministic for reproducibility
-    for (auto& pair : graph.nodes) {
-        FluxionNode& node = pair.second;
-        node.x = (static_cast<double>(std::rand()) / RAND_MAX) * graph.dieWidth;
-        node.y = (static_cast<double>(std::rand()) / RAND_MAX) * graph.dieHeight;
+    // 3. Physical Synthesis (New flow: instead of Python)
+    std::cout << "[FLUXION] Launching embedded physical synthesis engine..." << std::endl;
+    fluxion::FluxionEngine engine;
+    engine.loadFromGraph(graph);
+    
+    // Set weights (can be passed from command line in a real tool)
+    engine.setForceWeights(1.0, 0.5, 0.8, 0.3, 0.0);
+    
+    // Run optimization (e.g. 5000 steps)
+    engine.optimize(5000, 100.0);
+    
+    // Map placed coordinates back to the graph
+    const auto& placed_particles = engine.getParticles();
+    for (const auto& p : placed_particles) {
+        if (graph.nodes.count(p.id)) {
+            graph.nodes[p.id].x = p.x;
+            graph.nodes[p.id].y = p.y;
+        }
     }
 
     // Export to JSON

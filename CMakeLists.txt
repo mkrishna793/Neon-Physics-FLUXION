@@ -13,6 +13,16 @@ option(FLUXION_BUILD_DOCS "Build documentation" OFF)
 
 # Find dependencies
 find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
+find_package(OpenMP)
+
+if(OpenMP_FOUND)
+    message(STATUS "OpenMP found: Parallel physical synthesis enabled")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+else()
+    message(WARNING "OpenMP not found, running physics engine in single-threaded mode")
+endif()
 
 # OpenCL (optional)
 if(FLUXION_USE_OPENCL)
@@ -28,6 +38,8 @@ endif()
 # FLUXION Verilator Export Pass (standalone library)
 add_library(fluxion_export STATIC
     src/cpp/V3FluxionExport.cpp
+    src/cpp/FluxionEngine.cpp
+    src/cpp/BarnesHutTree.cpp
 )
 
 target_include_directories(fluxion_export PUBLIC
@@ -36,6 +48,9 @@ target_include_directories(fluxion_export PUBLIC
 )
 
 target_compile_features(fluxion_export PUBLIC cxx_std_17)
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(fluxion_export PUBLIC OpenMP::OpenMP_CXX)
+endif()
 
 # Python bindings (using pybind11 if available)
 find_package(pybind11 QUIET)

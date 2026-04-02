@@ -113,6 +113,41 @@ For more information, visit: https://github.com/fluxion-project/fluxion
         help="TopoLoss force weight (default: 0.3)",
     )
     opt_parser.add_argument(
+        "--density-weight",
+        type=float,
+        default=0.0,
+        help="Density equalization force weight (default: 0.0)",
+    )
+    opt_parser.add_argument(
+        "--electrostatic-weight",
+        type=float,
+        default=0.0,
+        help="Electrostatic smoothing force weight (default: 0.0)",
+    )
+    opt_parser.add_argument(
+        "--legalize",
+        action="store_true",
+        help="Run hybrid legalizer after placement",
+    )
+    opt_parser.add_argument(
+        "--def-output",
+        action="store_true",
+        help="Export placement to DEF format",
+    )
+    opt_parser.add_argument(
+        "--tech-node",
+        type=str,
+        default="7nm",
+        choices=["3nm", "7nm", "14nm", "28nm"],
+        help="Technology node for legalizer grids (default: 7nm)",
+    )
+    opt_parser.add_argument(
+        "--z3-timeout",
+        type=int,
+        default=60,
+        help="Timeout in seconds for Z3 SAT solver during legalization (default: 60)",
+    )
+    opt_parser.add_argument(
         "-q", "--quiet",
         action="store_true",
         help="Suppress output",
@@ -236,6 +271,12 @@ def cmd_optimize(args) -> int:
         thermal_repulsion_weight=args.thermal_weight,
         timing_gravity_weight=args.timing_weight,
         topoloss_weight=args.topoloss_weight,
+        density_equalization_weight=args.density_weight,
+        electrostatic_smoothing_weight=args.electrostatic_weight,
+        legalize=args.legalize,
+        output_def=args.def_output,
+        tech_node=args.tech_node,
+        z3_timeout_s=args.z3_timeout,
     )
 
     # Create and run engine

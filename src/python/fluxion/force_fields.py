@@ -16,8 +16,8 @@ from abc import ABC, abstractmethod
 from typing import Dict, List, Tuple, Optional
 from dataclasses import dataclass
 
-from .particle_system import FluxionParticleSystem, FluxionParticle
 from .percolation import ThermalPercolationChecker
+from .barnes_hut import BarnesHutTree
 
 
 @dataclass
@@ -237,16 +237,14 @@ class ThermalRepulsionForce(ForceField):
         """
         super().__init__("ThermalRepulsion", weight)
         self.thermal_constant = thermal_constant
-        self.min_distance = min_distance
         self.percolation_checker = ThermalPercolationChecker()
+        self.barnes_hut_cache = None
 
     def calculate(self, system: FluxionParticleSystem) -> ForceResult:
         """Calculate thermal repulsion forces on all particles."""
         n = len(system.particles)
         forces = np.zeros((n, 2))
         total_energy = 0.0
-        max_force = 0.0
-
         # -------- VECTORIZED N^2 --------
         if n == 0:
             return ForceResult(
@@ -259,7 +257,32 @@ class ThermalRepulsionForce(ForceField):
         particles = list(system.particles.values())
         positions = np.array([[p.x, p.y] for p in particles])
         powers = np.array([p.power_pw for p in particles])
-        q = np.sqrt(powers + 1)
+        charges = np.sqrt(powers + 1)
+        q = charges
+
+        # For large designs (N > 5000), use O(N log N) Barnes-Hut
+        if n > 5000:
+            if self.barnes_hut_cache is None:
+                self.barnes_hut_cache = BarnesHutTree(theta=0.5)
+            
+            self.barnes_hut_cache.build(positions, charges)
+            forces, total_energy = self.barnes_hut_cache.compute_repulsion_forces(
+                positions, charges, self.thermal_constant, self.min_distance
+            )
+            max_force = np.max(np.linalg.norm(forces, axis=1)) if len(forces) > 0 else 0.0
+            
+            perc_result = self.percolation_checker.analyze(system)
+            return ForceResult(
+                forces=forces * self.weight,
+                energy=total_energy * self.weight,
+                max_force=max_force * self.weight,
+                force_details={
+                    'max_temperature': system.max_temperature(),
+                    'using_barnes_hut': True,
+                    'percolation_risk': perc_result.percolation_risk,
+                    'is_percolating': perc_result.is_percolating
+                }
+            )
 
         diffs = positions[np.newaxis, :, :] - positions[:, np.newaxis, :]  # Shape: (N, N, 2)
         dist_sq = np.sum(diffs**2, axis=2)
@@ -297,7 +320,19 @@ class ThermalRepulsionForce(ForceField):
         """Calculate total thermal energy."""
         total_energy = 0.0
         particles = list(system.particles.values())
-        n = len(particles)
+        if n == 0: return 0.0
+
+        positions = np.array([[p.x, p.y] for p in particles])
+        charges = np.array([np.sqrt(p.power_pw + 1) for p in particles])
+
+        if n > 5000:
+            if self.barnes_hut_cache is None:
+                self.barnes_hut_cache = BarnesHutTree(theta=0.5)
+            self.barnes_hut_cache.build(positions, charges)
+            _, total_energy = self.barnes_hut_cache.compute_repulsion_forces(
+                positions, charges, self.thermal_constant, self.min_distance
+            )
+            return total_energy * self.weight
 
         if n < 2:
             return 0.0
@@ -642,19 +677,28 @@ class CompositeForceField(ForceField):
     """
 
     def __init__(self, weight: float = 1.0):
-        """Initialize composite force field with all four FLUXION forces."""
+        """Initialize composite force field with all FLUXION forces."""
         super().__init__("Composite", weight)
 
         self.wire_tension = WireTensionForce(weight=1.0)
         self.thermal_repulsion = ThermalRepulsionForce(weight=0.5)
         self.timing_gravity = TimingGravityForce(weight=0.8)
         self.topoloss = TopoLossForce(weight=0.3)
+        
+        # Import here to avoid circular imports
+        from .force_density import DensityEqualizationForce
+        from .force_electrostatic import ElectrostaticSmoothingForce
+        
+        self.density_equalization = DensityEqualizationForce(weight=0.0)  # Disabled by default
+        self.electrostatic_smoothing = ElectrostaticSmoothingForce(weight=0.0) # Disabled by default
 
         self.force_fields = [
             self.wire_tension,
             self.thermal_repulsion,
             self.timing_gravity,
             self.topoloss,
+            self.density_equalization,
+            self.electrostatic_smoothing,
         ]
 
     def calculate(self, system: FluxionParticleSystem) -> ForceResult:
@@ -694,15 +738,10 @@ class CompositeForceField(ForceField):
         return total_energy * self.weight
 
     def set_weights(self, wire_tension: float = None, thermal_repulsion: float = None,
-                    timing_gravity: float = None, topoloss: float = None) -> None:
+                    timing_gravity: float = None, topoloss: float = None,
+                    density: float = None, electrostatic: float = None) -> None:
         """
         Set individual force field weights.
-
-        Args:
-            wire_tension: Weight for wire tension force
-            thermal_repulsion: Weight for thermal repulsion force
-            timing_gravity: Weight for timing gravity force
-            topoloss: Weight for TopoLoss force
         """
         if wire_tension is not None:
             self.wire_tension.set_weight(wire_tension)
@@ -712,6 +751,10 @@ class CompositeForceField(ForceField):
             self.timing_gravity.set_weight(timing_gravity)
         if topoloss is not None:
             self.topoloss.set_weight(topoloss)
+        if density is not None:
+            self.density_equalization.set_weight(density)
+        if electrostatic is not None:
+            self.electrostatic_smoothing.set_weight(electrostatic)
 
     def get_weights(self) -> Dict[str, float]:
         """Get current weights for all force fields."""
@@ -720,4 +763,6 @@ class CompositeForceField(ForceField):
             'thermal_repulsion': self.thermal_repulsion.weight,
             'timing_gravity': self.timing_gravity.weight,
             'topoloss': self.topoloss.weight,
+            'density': self.density_equalization.weight,
+            'electrostatic': self.electrostatic_smoothing.weight,
         }

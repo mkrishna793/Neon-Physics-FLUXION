@@ -32,6 +32,17 @@ from .force_fields import (
     CompositeForceField,
 )
 
+from .force_density import DensityEqualizationForce
+from .force_electrostatic import ElectrostaticSmoothingForce
+
+from .barnes_hut import BarnesHutTree
+from .spatial_hash import SpatialHashGrid
+
+from .def_exporter import DEFExporter, export_def
+from .lef_library import LEFLibrary
+from .grid import PlacementGrid
+from .legalizer import HybridLegalizer, TetrisLegalizer, Z3HotspotSolver
+
 from .annealing import (
     ThermodynamicAnnealing,
     TemperatureSchedule,
@@ -62,6 +73,17 @@ __all__ = [
     "TimingGravityForce",
     "TopoLossForce",
     "CompositeForceField",
+    "DensityEqualizationForce",
+    "ElectrostaticSmoothingForce",
+    "BarnesHutTree",
+    "SpatialHashGrid",
+    "DEFExporter",
+    "export_def",
+    "LEFLibrary",
+    "PlacementGrid",
+    "HybridLegalizer",
+    "TetrisLegalizer",
+    "Z3HotspotSolver",
     # Annealing
     "ThermodynamicAnnealing",
     "TemperatureSchedule",

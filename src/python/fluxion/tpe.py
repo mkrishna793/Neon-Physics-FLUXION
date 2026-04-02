@@ -34,6 +34,8 @@ from .force_fields import (
     TopoLossForce,
     ForceResult,
 )
+from .legalizer import HybridLegalizer
+from .def_exporter import export_def
 from .annealing import (
     ThermodynamicAnnealing,
     TemperatureSchedule,
@@ -54,11 +56,19 @@ class PlacementConfig:
     # Target timing (picoseconds)
     target_clock_period_ps: float = 1000.0
 
+    # Pipeline stages
+    legalize: bool = False
+    output_def: bool = False
+    tech_node: str = "7nm"  # 3nm, 7nm, 14nm, 28nm
+    z3_timeout_s: int = 60
+
     # Force field weights
     wire_tension_weight: float = 1.0
     thermal_repulsion_weight: float = 0.5
     timing_gravity_weight: float = 0.8
     topoloss_weight: float = 0.3
+    density_equalization_weight: float = 0.0
+    electrostatic_smoothing_weight: float = 0.0
 
     # Annealing parameters
     initial_temperature: float = 1000.0
@@ -112,6 +122,10 @@ class PlacementResult:
     energy_history: List[float] = field(default_factory=list)
     temperature_history: List[float] = field(default_factory=list)
 
+    # Optional pipeline results
+    legalizer_stats: dict = None
+    def_file_path: str = None
+
     # Particle system
     circuit: Optional[CircuitParticles] = None
 
@@ -131,6 +145,8 @@ class PlacementResult:
             'total_steps': self.total_steps,
             'final_temperature': self.final_temperature,
             'acceptance_rate': self.acceptance_rate,
+            'legalizer_stats': self.legalizer_stats,
+            'def_file_path': self.def_file_path,
         }
 
     def save(self, filepath: str) -> None:
@@ -170,6 +186,8 @@ class PlacementResult:
             acceptance_rate=data['acceptance_rate'],
             energy_history=data.get('energy_history', []),
             temperature_history=data.get('temperature_history', []),
+            legalizer_stats=data.get('legalizer_stats'),
+            def_file_path=data.get('def_file_path'),
         )
 
 
@@ -209,6 +227,8 @@ class ThermodynamicPlacementEngine:
             thermal_repulsion=self.config.thermal_repulsion_weight,
             timing_gravity=self.config.timing_gravity_weight,
             topoloss=self.config.topoloss_weight,
+            density=self.config.density_equalization_weight,
+            electrostatic=self.config.electrostatic_smoothing_weight,
         )
 
         # Initialize GPU if available
@@ -377,6 +397,43 @@ class ThermodynamicPlacementEngine:
 
         # Extract best positions
         best_positions = state.best_positions.copy()
+
+        # Phase 2: Post-processing pipeline (Legalization & DEF Export)
+        legalizer_stats = None
+        def_file_path = None
+        
+        if self.config.legalize:
+            if self.config.verbose:
+                print("\n[Phase 2] Running Hybrid Legalizer (Tetris + Z3)...")
+            
+            # Update circuit with best positions so far
+            self.circuit.set_positions(best_positions)
+            
+            legalizer = HybridLegalizer(node=self.config.tech_node, timeout_s=self.config.z3_timeout_s)
+            legalizer_stats = legalizer.run(self.circuit)
+            
+            # The circuit positions have been updated in place
+            # Update the result positions to the legal ones
+            best_positions = self.circuit.get_positions()
+            
+            if self.config.verbose:
+                print(f"  ✓ Legalization finished in {legalizer_stats['time_s']:.2f}s")
+                print(f"  ✓ Tetris success: {legalizer_stats['tetris_success']} cells")
+                print(f"  ✓ Z3 resolved:    {legalizer_stats['z3_resolved']} cells")
+                print(f"  ⚠ Failed/Illegal: {legalizer_stats['failed_illegal']} cells")
+            
+        if self.config.output_def:
+            def_path = "output.def"
+            if self.config.verbose:
+                print(f"\n[Phase 3] Exporting to DEF ({def_path})...")
+            
+            # Make sure circuit has the final positions
+            self.circuit.set_positions(best_positions)
+            export_def(self.circuit, def_path)
+            def_file_path = def_path
+            
+            if self.config.verbose:
+                print(f"  ✓ Export complete.")
 
         # Update circuit with best positions
         for i, particle in enumerate(self.circuit.particles.values()):
