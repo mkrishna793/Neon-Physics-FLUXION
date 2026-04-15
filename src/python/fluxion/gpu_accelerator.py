@@ -16,6 +16,25 @@ import warnings
 
 # OpenCL kernel for force calculations
 OPENCL_KERNEL_SOURCE = """
+// Polyfill for sliding atomic add on floating point pointers
+#pragma OPENCL EXTENSION cl_khr_global_int32_base_atomics : enable
+
+inline void atomicAddFloat(volatile __global float *addr, float val)
+{
+    union {
+        unsigned int u32;
+        float f32;
+    } current, expected, next;
+
+    current.f32 = *addr;
+    do {
+        expected.f32 = current.f32;
+        next.f32 = expected.f32 + val;
+        current.u32 = atomic_cmpxchg((volatile __global unsigned int *)addr,
+                                     expected.u32, next.u32);
+    } while (current.u32 != expected.u32);
+}
+
 // Wire tension force kernel
 __kernel void wire_tension_force(
     __global const float* positions,    // Nx2 array
@@ -48,10 +67,10 @@ __kernel void wire_tension_force(
     float fy = force_mag * diff_y / dist;
 
     // Atomic add for forces (each connection contributes)
-    atomic_add(&forces[src * 2], fx);
-    atomic_add(&forces[src * 2 + 1], fy);
-    atomic_add(&forces[dst * 2], -fx);
-    atomic_add(&forces[dst * 2 + 1], -fy);
+    atomicAddFloat(&forces[src * 2], fx);
+    atomicAddFloat(&forces[src * 2 + 1], fy);
+    atomicAddFloat(&forces[dst * 2], -fx);
+    atomicAddFloat(&forces[dst * 2 + 1], -fy);
 }
 
 // Thermal repulsion force kernel
