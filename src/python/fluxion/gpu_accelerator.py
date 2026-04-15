@@ -153,13 +153,13 @@ __kernel void reduce_energy(
     if (idx >= num_elements) return;
 
     // Simple reduction - can be optimized with parallel reduction
-    atomic_add(total_energy, partial_energies[idx]);
+    atomicAddFloat(total_energy, partial_energies[idx]);
 }
 
 // Position update kernel (for annealing)
 __kernel void update_positions(
     __global float* positions,
-    __global const float* velocities,
+    __global float* velocities,
     __global const float* forces,
     const int num_particles,
     const float dt,
