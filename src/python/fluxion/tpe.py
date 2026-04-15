@@ -40,6 +40,8 @@ from .annealing import (
     ThermodynamicAnnealing,
     TemperatureSchedule,
     AnnealingState,
+    DiscoveryBasin,
+    ScheduleType,
 )
 from .gpu_accelerator import GPUAccelerator, OpenCLAccelerator, create_accelerator
 
@@ -89,6 +91,16 @@ class PlacementConfig:
     output_dir: str = "./output"
     save_history: bool = True
     save_intermediate: bool = False
+
+    # Discovery mode (stochastic exploration)
+    discovery_mode: bool = False
+    discovery_cycles: int = 3
+    discovery_basins: int = 5
+    levy_probability: float = 0.15
+    reheat_fraction: float = 0.6
+
+    # Adaptive weight scheduling
+    adaptive_weights: bool = False
 
 
 @dataclass
@@ -379,19 +391,47 @@ class ThermodynamicPlacementEngine:
         def energy_function(pos: np.ndarray) -> float:
             return self.compute_energy(pos)
 
-        # Run annealing
+        # Create annealing callback with optional adaptive weights
+        annealing_callback = callback
+        if self.config.adaptive_weights:
+            initial_weights = self.force_field.get_weights()
+            total_steps = self.config.annealing_steps
+            def adaptive_callback(step, temp, energy, positions):
+                self.force_field.auto_adjust_weights(step, total_steps)
+                if callback:
+                    callback(step, temp, energy, positions)
+            annealing_callback = adaptive_callback
+
+        # Run annealing (standard or discovery)
         start_time = time.time()
 
         bounds = (0, 0, self.config.die_width, self.config.die_height)
 
-        state = self.annealing.anneal(
-            initial_positions=initial_positions,
-            energy_function=energy_function,
-            total_steps=self.config.annealing_steps,
-            bounds=bounds,
-            callback=callback,
-            verbose=self.config.verbose,
-        )
+        self._discovery_basins = None
+
+        if self.config.discovery_mode:
+            state, basins = self.annealing.discovery_anneal(
+                initial_positions=initial_positions,
+                energy_function=energy_function,
+                total_steps=self.config.annealing_steps,
+                num_cycles=self.config.discovery_cycles,
+                reheat_fraction=self.config.reheat_fraction,
+                levy_probability=self.config.levy_probability,
+                num_basins=self.config.discovery_basins,
+                bounds=bounds,
+                callback=annealing_callback,
+                verbose=self.config.verbose,
+            )
+            self._discovery_basins = basins
+        else:
+            state = self.annealing.anneal(
+                initial_positions=initial_positions,
+                energy_function=energy_function,
+                total_steps=self.config.annealing_steps,
+                bounds=bounds,
+                callback=annealing_callback,
+                verbose=self.config.verbose,
+            )
 
         end_time = time.time()
 

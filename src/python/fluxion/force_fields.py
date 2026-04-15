@@ -237,6 +237,7 @@ class ThermalRepulsionForce(ForceField):
         """
         super().__init__("ThermalRepulsion", weight)
         self.thermal_constant = thermal_constant
+        self.min_distance = min_distance
         self.percolation_checker = ThermalPercolationChecker()
         self.barnes_hut_cache = None
 
@@ -255,7 +256,7 @@ class ThermalRepulsionForce(ForceField):
             )
 
         particles = list(system.particles.values())
-        positions = np.array([[p.x, p.y] for p in particles])
+        positions = np.array([[p.x, p.y] for p in particles], dtype=np.float64)
         powers = np.array([p.power_pw for p in particles])
         charges = np.sqrt(powers + 1)
         q = charges
@@ -318,9 +319,10 @@ class ThermalRepulsionForce(ForceField):
 
     def calculate_energy(self, system: FluxionParticleSystem) -> float:
         """Calculate total thermal energy."""
-        total_energy = 0.0
         particles = list(system.particles.values())
-        if n == 0: return 0.0
+        n = len(particles)
+        if n < 2:
+            return 0.0
 
         positions = np.array([[p.x, p.y] for p in particles])
         charges = np.array([np.sqrt(p.power_pw + 1) for p in particles])
@@ -334,13 +336,7 @@ class ThermalRepulsionForce(ForceField):
             )
             return total_energy * self.weight
 
-        if n < 2:
-            return 0.0
-            
-        positions = np.array([[p.x, p.y] for p in particles])
-        powers = np.array([p.power_pw for p in particles])
-        q = np.sqrt(powers + 1)
-
+        # Vectorized N^2 for small designs
         diffs = positions[np.newaxis, :, :] - positions[:, np.newaxis, :]
         dist_sq = np.sum(diffs**2, axis=2)
         np.fill_diagonal(dist_sq, np.inf)
@@ -348,7 +344,7 @@ class ThermalRepulsionForce(ForceField):
         dist = np.sqrt(dist_sq)
         dist = np.maximum(dist, self.min_distance)
 
-        q_prod = q[:, np.newaxis] * q[np.newaxis, :]
+        q_prod = charges[:, np.newaxis] * charges[np.newaxis, :]
         total_energy = np.sum(self.thermal_constant * q_prod / dist) / 2.0
 
         return total_energy * self.weight
@@ -766,3 +762,51 @@ class CompositeForceField(ForceField):
             'density': self.density_equalization.weight,
             'electrostatic': self.electrostatic_smoothing.weight,
         }
+
+    def auto_adjust_weights(self, step: int, total_steps: int,
+                            initial_weights: Dict[str, float] = None) -> None:
+        """
+        Dynamically adjust force weights during annealing.
+
+        Early phase (0-40%): Wire tension + thermal repulsion dominate
+            → global distribution of gates across die
+        Mid phase (40-70%): Timing gravity ramps up
+            → critical paths start aligning
+        Late phase (70-100%): TopoLoss ramps up, thermal dials back
+            → fine-tune topology and convergence
+
+        Args:
+            step: Current annealing step
+            total_steps: Total steps in schedule
+            initial_weights: Starting weights (uses current if None)
+        """
+        if initial_weights is None:
+            initial_weights = {
+                'wire_tension': 1.0,
+                'thermal_repulsion': 0.5,
+                'timing_gravity': 0.8,
+                'topoloss': 0.3,
+            }
+
+        progress = step / max(total_steps - 1, 1)
+
+        # Wire tension: constant with slight increase at end
+        wt = initial_weights['wire_tension'] * (1.0 + 0.3 * progress)
+
+        # Thermal repulsion: strong early, fades late
+        tr = initial_weights['thermal_repulsion'] * max(1.0 - 0.6 * progress, 0.2)
+
+        # Timing gravity: ramps up from 40% onward
+        tg_ramp = max(0.0, (progress - 0.4) / 0.6) if progress > 0.4 else 0.0
+        tg = initial_weights['timing_gravity'] * (0.3 + 0.7 * tg_ramp)
+
+        # TopoLoss: ramps up from 70% onward
+        tl_ramp = max(0.0, (progress - 0.7) / 0.3) if progress > 0.7 else 0.0
+        tl = initial_weights['topoloss'] * (0.2 + 0.8 * tl_ramp)
+
+        self.set_weights(
+            wire_tension=wt,
+            thermal_repulsion=tr,
+            timing_gravity=tg,
+            topoloss=tl,
+        )

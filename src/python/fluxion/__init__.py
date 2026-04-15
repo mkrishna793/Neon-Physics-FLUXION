@@ -18,6 +18,7 @@ __author__ = "FLUXION Project"
 from .particle_system import (
     FluxionParticle,
     FluxionConnection,
+    CriticalPath,
     FluxionParticleSystem,
     CircuitParticles,
     load_circuit_particles,
@@ -46,6 +47,7 @@ from .legalizer import HybridLegalizer, TetrisLegalizer, Z3HotspotSolver
 from .annealing import (
     ThermodynamicAnnealing,
     TemperatureSchedule,
+    ScheduleType,
 )
 
 from .gpu_accelerator import (
@@ -63,6 +65,7 @@ __all__ = [
     # Particle system
     "FluxionParticle",
     "FluxionConnection",
+    "CriticalPath",
     "FluxionParticleSystem",
     "CircuitParticles",
     "load_circuit_particles",
@@ -87,6 +90,7 @@ __all__ = [
     # Annealing
     "ThermodynamicAnnealing",
     "TemperatureSchedule",
+    "ScheduleType",
     # GPU
     "GPUAccelerator",
     "OpenCLAccelerator",

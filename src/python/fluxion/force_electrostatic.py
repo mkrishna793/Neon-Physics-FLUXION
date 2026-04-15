@@ -12,6 +12,7 @@ Uses FFT for fast O(N log N) solving of Poisson's equation.
 """
 
 import numpy as np
+from typing import Tuple
 try:
     from scipy.fft import idctn, dctn
     SCIPY_AVAILABLE = True

@@ -28,6 +28,15 @@ class ScheduleType(Enum):
     EXPONENTIAL = "exponential"
     LOGARITHMIC = "logarithmic"
     ADAPTIVE = "adaptive"
+    DISCOVERY = "discovery"
+
+
+@dataclass
+class DiscoveryBasin:
+    """A distinct placement basin discovered during exploration."""
+    positions: np.ndarray
+    energy: float
+    cycle: int
 
 
 @dataclass
@@ -63,8 +72,12 @@ class TemperatureSchedule:
 
         elif self.schedule_type == ScheduleType.EXPONENTIAL:
             # Exponential: T = T0 * rate^step
-            # Convert to smooth decrease
-            return self.initial_temp * (self.cooling_rate ** (step / self.steps_per_temp))
+            # Compute rate so that T actually reaches final_temp at the last step
+            if self.final_temp > 0 and self.initial_temp > self.final_temp:
+                rate = (self.final_temp / self.initial_temp) ** (1.0 / max(total_steps - 1, 1))
+            else:
+                rate = self.cooling_rate ** (1.0 / self.steps_per_temp)
+            return self.initial_temp * (rate ** step)
 
         elif self.schedule_type == ScheduleType.LOGARITHMIC:
             # Logarithmic: T = T0 / log(step + 2)
@@ -459,3 +472,203 @@ class ThermodynamicAnnealing:
             cooling_rate=0.98,
             steps_per_temp=200
         )
+
+    # ------------------------------------------------------------------ #
+    #  DISCOVERY MODE — Stochastic Exploration for Novel Placements       #
+    # ------------------------------------------------------------------ #
+
+    def propose_levy_move(
+        self,
+        positions: np.ndarray,
+        temperature: float,
+        alpha: float = 1.5,
+        bounds: Tuple[float, float, float, float] = None,
+    ) -> np.ndarray:
+        """
+        Propose a Lévy flight move — heavy-tailed jump for exploration.
+
+        Unlike Gaussian moves that make small local steps, Lévy flights
+        occasionally make very large jumps, enabling the optimizer to
+        teleport across the die and discover radically different basins.
+
+        Args:
+            positions: Current positions (Nx2)
+            temperature: Current temperature (scales magnitude)
+            alpha: Lévy exponent (1.0–2.0; lower = heavier tail)
+            bounds: (xmin, ymin, xmax, ymax)
+
+        Returns:
+            New positions array
+        """
+        n = positions.shape[0]
+        new_positions = positions.copy()
+
+        # Pick a random subset to move (~sqrt(N) particles)
+        k = max(1, int(np.sqrt(n)))
+        indices = self.rng.choice(n, size=min(k, n), replace=False)
+
+        # Lévy stable distribution: u / |v|^(1/alpha)
+        # This gives heavy-tailed step sizes
+        scale = np.sqrt(temperature) * 0.2
+        u = self.rng.normal(0, scale, size=(len(indices), 2))
+        v = self.rng.normal(0, 1.0, size=(len(indices), 2))
+        v = np.maximum(np.abs(v), 1e-8)
+        steps = u / (v ** (1.0 / alpha))
+
+        # Clip extreme jumps to 30% of die dimension to stay reasonable
+        if bounds:
+            max_jump_x = (bounds[2] - bounds[0]) * 0.3
+            max_jump_y = (bounds[3] - bounds[1]) * 0.3
+            steps[:, 0] = np.clip(steps[:, 0], -max_jump_x, max_jump_x)
+            steps[:, 1] = np.clip(steps[:, 1], -max_jump_y, max_jump_y)
+
+        new_positions[indices] += steps
+
+        if bounds:
+            xmin, ymin, xmax, ymax = bounds
+            new_positions[:, 0] = np.clip(new_positions[:, 0], xmin, xmax)
+            new_positions[:, 1] = np.clip(new_positions[:, 1], ymin, ymax)
+
+        return new_positions
+
+    def discovery_anneal(
+        self,
+        initial_positions: np.ndarray,
+        energy_function: Callable[[np.ndarray], float],
+        total_steps: int = 10000,
+        num_cycles: int = 3,
+        reheat_fraction: float = 0.6,
+        levy_probability: float = 0.15,
+        num_basins: int = 5,
+        bounds: Tuple[float, float, float, float] = None,
+        callback: Callable[[int, float, float, np.ndarray], None] = None,
+        verbose: bool = True,
+    ) -> Tuple[AnnealingState, List[DiscoveryBasin]]:
+        """
+        Discovery annealing — explore multiple basins of the energy landscape.
+
+        Instead of converging to a single minimum, this mode:
+        1. Cools normally, then REHEATS to explore a new region
+        2. Uses Lévy flights for occasional large jumps
+        3. Tracks the top-K distinct placements discovered
+
+        This finds novel, non-obvious gate arrangements that a greedy
+        optimizer would never discover.
+
+        Args:
+            initial_positions: Starting positions (Nx2)
+            energy_function: Energy function
+            total_steps: Total steps across ALL cycles
+            num_cycles: Number of reheat cycles
+            reheat_fraction: How much of initial temp to reheat to (0-1)
+            levy_probability: Probability of using Lévy flight per step
+            num_basins: Track top-K distinct basins
+            bounds: Position boundaries
+            callback: Optional callback
+            verbose: Print progress
+
+        Returns:
+            (final_state, list_of_discovered_basins)
+        """
+        steps_per_cycle = total_steps // max(num_cycles, 1)
+        basins: List[DiscoveryBasin] = []
+
+        self.state = AnnealingState()
+        positions = initial_positions.copy()
+        best_positions = initial_positions.copy()
+
+        current_energy = energy_function(positions)
+        self.state.current_energy = current_energy
+        self.state.best_energy = current_energy
+
+        if verbose:
+            print(f"Discovery mode: {num_cycles} cycles × {steps_per_cycle} steps")
+            print(f"  Lévy flight probability: {levy_probability:.0%}")
+            print(f"  Reheat fraction: {reheat_fraction:.0%}")
+
+        global_step = 0
+
+        for cycle in range(num_cycles):
+            # Compute cycle-specific temperatures
+            if cycle == 0:
+                cycle_init_temp = self.schedule.initial_temp
+            else:
+                cycle_init_temp = self.schedule.initial_temp * reheat_fraction
+
+            cycle_final_temp = self.schedule.final_temp
+
+            if verbose:
+                print(f"\n--- Cycle {cycle+1}/{num_cycles} "
+                      f"(T: {cycle_init_temp:.1f} → {cycle_final_temp:.4f}) ---")
+
+            for step in range(steps_per_cycle):
+                # Temperature for this step within the cycle
+                progress = step / max(steps_per_cycle - 1, 1)
+                if cycle_init_temp > cycle_final_temp and cycle_final_temp > 0:
+                    rate = (cycle_final_temp / cycle_init_temp) ** (1.0 / max(steps_per_cycle - 1, 1))
+                    temperature = cycle_init_temp * (rate ** step)
+                else:
+                    temperature = cycle_init_temp * (1 - progress) + cycle_final_temp * progress
+
+                self.state.temperature = temperature
+                self.state.step = global_step
+
+                # Decide: Lévy flight or normal Gaussian move
+                use_levy = self.rng.random() < levy_probability
+                if use_levy:
+                    new_positions = self.propose_levy_move(
+                        positions, temperature, bounds=bounds
+                    )
+                else:
+                    new_positions, _ = self.propose_move(
+                        positions, temperature, bounds
+                    )
+
+                new_energy = energy_function(new_positions)
+
+                # Accept/reject
+                if self.metropolis_hastings_accept(current_energy, new_energy, temperature):
+                    positions = new_positions
+                    current_energy = new_energy
+                    self.state.accepted_moves += 1
+                else:
+                    self.state.rejected_moves += 1
+
+                # Track best
+                if current_energy < self.state.best_energy:
+                    self.state.best_energy = current_energy
+                    best_positions = positions.copy()
+
+                self.state.record_step(current_energy, temperature)
+
+                if callback:
+                    callback(global_step, temperature, current_energy, positions)
+
+                global_step += 1
+
+            # End of cycle — record this basin
+            basin = DiscoveryBasin(
+                positions=positions.copy(),
+                energy=current_energy,
+                cycle=cycle,
+            )
+            basins.append(basin)
+
+            if verbose:
+                print(f"  Basin {cycle+1}: energy={current_energy:.2f}")
+
+        # Keep only top-K basins by energy
+        basins.sort(key=lambda b: b.energy)
+        basins = basins[:num_basins]
+
+        # Set final state to the global best
+        self.state.best_positions = best_positions.copy()
+        self.state.current_positions = positions.copy()
+
+        if verbose:
+            print(f"\nDiscovery complete. Found {len(basins)} basins.")
+            print(f"  Best energy: {self.state.best_energy:.2f}")
+            for i, b in enumerate(basins):
+                print(f"  Basin {i+1}: energy={b.energy:.2f} (cycle {b.cycle+1})")
+
+        return self.state, basins

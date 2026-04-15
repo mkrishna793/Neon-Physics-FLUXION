@@ -527,6 +527,17 @@ class CircuitParticles(FluxionParticleSystem):
 
         return circuit
 
+    def compute_statistics(self) -> None:
+        """Compute and cache aggregate statistics for this circuit."""
+        self.total_gates = len(self.particles)
+        self.total_nets = len(self.connections)
+        self.total_power_pw = sum(p.power_pw for p in self.particles.values())
+        self.total_area_um2 = sum(p.area_um2 for p in self.particles.values())
+        self.compute_logic_levels()
+        self.max_logic_level = max(
+            (p.level for p in self.particles.values()), default=0
+        )
+
     def to_dict(self) -> dict:
         """Convert to dictionary for JSON serialization."""
         return {

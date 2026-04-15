@@ -17,12 +17,13 @@
 
 ---
 
-## 🚀 NEW in V2: True Physical Synthesis
-FLUXION V2 evolves from a Python prototype into a **production-grade Physical Synthesis engine**, featuring:
-- 🏎️ **Million-Gate Scalability**: $O(N \log N)$ Barnes-Hut quadtrees and FFT-based Electrostatic Smoothing.
-- 📐 **Hybrid Legalizer**: Fast Tetris placement + Z3 SAT exact solver for congested area legalizations across 3nm/7nm nodes.
-- 🏭 **DEF Export**: Auto-export to foundry-ready `.def` databases mapped to Database Units (DBU).
-- ⚙️ **C++ Native Core**: Full physics engine is embedded inside Verilator's AST pipeline via OpenMP.
+## 🚀 NEW in V3: Discovery Mode & Industry Benchmarks
+FLUXION V3 transforms the placement engine into a robust, probabilistic topological scaler capable of competing on massive datasets:
+- 🗺️ **Industry Benchmark Integration**: Natively ingest and evaluate ISPD 2005/2006 (Bookshelf), ICCAD 2014/2015 (LEF/DEF), and IWLS (BLIF) datasets.
+- 🌋 **Thermodynamic Discovery Mode**: Replaces strict determinism with simulated thermal reheating boundaries and **heavy-tailed Lévy Flights** to bounce out of local congestion basins and explore radically novel placement typologies.
+- ⚖️ **Adaptive Force Weighting**: Automatically scales the 6 core physical constraints dynamically across the simulation phases (e.g., favoring thermal repulsion early, heavily penalizing topology loss later).
+- 🏎️ **Million-Gate Scalability**: $O(N \log N)$ Barnes-Hut quadtrees and FFT-based Electrostatic Smoothing natively integrated.
+- 📐 **Hybrid Legalizer**: Fast Tetris placement + Z3 SAT exact solver for congested area legalizations.
 
 ---
 
@@ -93,6 +94,30 @@ Instead of machine learning that requires massive datasets, FLUXION models circu
 │   Annealing finds the GLOBAL ENERGY MINIMUM                    │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🔬 What We Discovered with "Discovery Mode" (V3)
+Standard EDA tools map chip layout mathematically and treat it as a continuous analytic function. Consequently, they aggressively "greedy descent" into the nearest local minima. If the tool starts with a cluster of hot gates jammed together, it might get permanently stuck there because pulling them apart temporarily violates Wire Tension metrics.
+
+In **V3**, we introduced **Thermodynamic Discovery Mode**:
+1. **Lévy Flights**: Instead of standard Gaussian movements (which only jostle gates locally), FLUXION uses heavy-tailed Lévy Flight statistics. This occasionally allows entirely cohesive subnetworks to "teleport" or take massive leaps across the silicon surface.
+2. **Thermal Reheating**: The physics environment periodically "boils" and forces the entire system constraint boundaries apart.
+
+**The Result?** FLUXION finds "meta-stable" configurations that perfectly balance HPWL (WireLength) and critical path timing, but do so with novel macro-architectures that standard optimizers blind themselves to. We observed it successfully breaking apart dense monolithic logic blocks, distributing the thermal cores into distinct islands without sacrificing communication speeds!
+
+---
+
+## ⚙️ How to Demo the Industry Benchmarks
+You can immediately verify FLUXION V3 using standard academic benchmarks:
+
+```bash
+# Generate a quick generic placement footprint matching ISPD Bookshelf specifications to test your engine locally
+python benchmarks/run_industry_benchmarks.py --generate-sample --sample-format bookshelf --sample-size 1000 --steps 500
+
+# Run FLUXION against a downloaded ICCAD (LEF/DEF) or ISPD (Bookshelf) benchmark suite folder
+python benchmarks/run_industry_benchmarks.py --dir /path/to/extracted/suite --steps 5000 --discovery
 ```
 
 ---
