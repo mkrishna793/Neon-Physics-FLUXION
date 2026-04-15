@@ -11,6 +11,7 @@ These forces are combined to create the energy landscape that the annealing
 process optimizes.
 """
 
+from __future__ import annotations
 import numpy as np
 from abc import ABC, abstractmethod
 from typing import Dict, List, Tuple, Optional
