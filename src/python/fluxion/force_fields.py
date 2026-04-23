@@ -685,9 +685,11 @@ class CompositeForceField(ForceField):
         # Import here to avoid circular imports
         from .force_density import DensityEqualizationForce
         from .force_electrostatic import ElectrostaticSmoothingForce
+        from .force_congestion import CongestionAwareForce
         
         self.density_equalization = DensityEqualizationForce(weight=0.0)  # Disabled by default
         self.electrostatic_smoothing = ElectrostaticSmoothingForce(weight=0.0) # Disabled by default
+        self.congestion_aware = CongestionAwareForce(weight=0.0) # Disabled by default
 
         self.force_fields = [
             self.wire_tension,
@@ -696,6 +698,7 @@ class CompositeForceField(ForceField):
             self.topoloss,
             self.density_equalization,
             self.electrostatic_smoothing,
+            self.congestion_aware,
         ]
 
     def calculate(self, system: FluxionParticleSystem) -> ForceResult:
@@ -734,24 +737,24 @@ class CompositeForceField(ForceField):
                 total_energy += force_field.calculate_energy(system)
         return total_energy * self.weight
 
-    def set_weights(self, wire_tension: float = None, thermal_repulsion: float = None,
-                    timing_gravity: float = None, topoloss: float = None,
-                    density: float = None, electrostatic: float = None) -> None:
+    def set_weights(self, **weights) -> None:
         """
-        Set individual force field weights.
+        Set individual force field weights via keyword arguments.
+        Example: set_weights(wire_tension=1.2, congestion=0.5)
         """
-        if wire_tension is not None:
-            self.wire_tension.set_weight(wire_tension)
-        if thermal_repulsion is not None:
-            self.thermal_repulsion.set_weight(thermal_repulsion)
-        if timing_gravity is not None:
-            self.timing_gravity.set_weight(timing_gravity)
-        if topoloss is not None:
-            self.topoloss.set_weight(topoloss)
-        if density is not None:
-            self.density_equalization.set_weight(density)
-        if electrostatic is not None:
-            self.electrostatic_smoothing.set_weight(electrostatic)
+        name_map = {
+            'wire_tension': self.wire_tension,
+            'thermal_repulsion': self.thermal_repulsion,
+            'timing_gravity': self.timing_gravity,
+            'topoloss': self.topoloss,
+            'density': self.density_equalization,
+            'electrostatic': self.electrostatic_smoothing,
+            'congestion': self.congestion_aware,
+        }
+
+        for name, weight in weights.items():
+            if name in name_map:
+                name_map[name].set_weight(weight)
 
     def get_weights(self) -> Dict[str, float]:
         """Get current weights for all force fields."""
@@ -762,6 +765,7 @@ class CompositeForceField(ForceField):
             'topoloss': self.topoloss.weight,
             'density': self.density_equalization.weight,
             'electrostatic': self.electrostatic_smoothing.weight,
+            'congestion': self.congestion_aware.weight,
         }
 
     def auto_adjust_weights(self, step: int, total_steps: int,

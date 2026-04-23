@@ -61,7 +61,7 @@ class PlacementConfig:
     # Pipeline stages
     legalize: bool = False
     output_def: bool = False
-    tech_node: str = "7nm"  # 3nm, 7nm, 14nm, 28nm
+    tech_node: str = "7nm"  # 2nm, 3nm, 7nm, 14nm, 28nm
     z3_timeout_s: int = 60
 
     # Force field weights
@@ -71,6 +71,7 @@ class PlacementConfig:
     topoloss_weight: float = 0.3
     density_equalization_weight: float = 0.0
     electrostatic_smoothing_weight: float = 0.0
+    congestion_aware_weight: float = 0.0
 
     # Annealing parameters
     initial_temperature: float = 1000.0
@@ -241,6 +242,7 @@ class ThermodynamicPlacementEngine:
             topoloss=self.config.topoloss_weight,
             density=self.config.density_equalization_weight,
             electrostatic=self.config.electrostatic_smoothing_weight,
+            congestion=self.config.congestion_aware_weight,
         )
 
         # Initialize GPU if available

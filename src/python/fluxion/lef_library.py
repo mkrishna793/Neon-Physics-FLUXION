@@ -39,7 +39,10 @@ class LEFLibrary:
         self.macros: Dict[str, MacroDef] = {}
         
         # Load parameters based on node
-        if node == "3nm":
+        if node == "2nm":
+            self.row_height = 0.210
+            self.site_width = 0.042
+        elif node == "3nm":
             self.row_height = 0.270
             self.site_width = 0.054
         elif node == "7nm":
