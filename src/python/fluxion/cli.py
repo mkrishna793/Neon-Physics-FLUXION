@@ -125,6 +125,12 @@ For more information, visit: https://github.com/fluxion-project/fluxion
         help="Electrostatic smoothing force weight (default: 0.0)",
     )
     opt_parser.add_argument(
+        "--congestion-weight",
+        type=float,
+        default=0.0,
+        help="Congestion-aware force weight (default: 0.0)",
+    )
+    opt_parser.add_argument(
         "--legalize",
         action="store_true",
         help="Run hybrid legalizer after placement",
@@ -138,7 +144,7 @@ For more information, visit: https://github.com/fluxion-project/fluxion
         "--tech-node",
         type=str,
         default="7nm",
-        choices=["3nm", "7nm", "14nm", "28nm"],
+        choices=["2nm", "3nm", "7nm", "14nm", "28nm"],
         help="Technology node for legalizer grids (default: 7nm)",
     )
     opt_parser.add_argument(
@@ -273,6 +279,7 @@ def cmd_optimize(args) -> int:
         topoloss_weight=args.topoloss_weight,
         density_equalization_weight=args.density_weight,
         electrostatic_smoothing_weight=args.electrostatic_weight,
+        congestion_aware_weight=args.congestion_weight,
         legalize=args.legalize,
         output_def=args.def_output,
         tech_node=args.tech_node,

@@ -1,0 +1,794 @@
+VERSION 5.8 ;
+DIVIDERCHAR "/" ;
+BUSBITCHARS "[]" ;
+DESIGN demo_circuit ;
+UNITS DISTANCE MICRONS 1000 ;
+
+DIEAREA ( 0 0 ) ( 1000000 1000000 ) ;
+
+COMPONENTS 100 ;
+  - nand_0 NAND_X1 + PLACED ( 374544 950760 ) N ;
+  - nand_1 NAND_X1 + PLACED ( 731970 598680 ) N ;
+  - nand_2 NAND_X1 + PLACED ( 156006 155880 ) N ;
+  - nand_3 NAND_X1 + PLACED ( 58104 866160 ) N ;
+  - nand_4 NAND_X1 + PLACED ( 601128 708120 ) N ;
+  - nand_5 NAND_X1 + PLACED ( 20574 969840 ) N ;
+  - nand_6 NAND_X1 + PLACED ( 832464 212400 ) N ;
+  - nand_7 NAND_X1 + PLACED ( 181818 183240 ) N ;
+  - nand_8 NAND_X1 + PLACED ( 304236 524880 ) N ;
+  - nand_9 NAND_X1 + PLACED ( 431946 291240 ) N ;
+  - nand_10 NAND_X1 + PLACED ( 611874 139320 ) N ;
+  - nand_11 NAND_X1 + PLACED ( 292140 366480 ) N ;
+  - nand_12 NAND_X1 + PLACED ( 456084 785160 ) N ;
+  - nand_13 NAND_X1 + PLACED ( 199692 514080 ) N ;
+  - nand_14 NAND_X1 + PLACED ( 592434 46440 ) N ;
+  - nand_15 NAND_X1 + PLACED ( 607554 170640 ) N ;
+  - nand_16 NAND_X1 + PLACED ( 65070 948960 ) N ;
+  - nand_17 NAND_X1 + PLACED ( 965628 808560 ) N ;
+  - nand_18 NAND_X1 + PLACED ( 304614 97560 ) N ;
+  - nand_19 NAND_X1 + PLACED ( 684234 440280 ) N ;
+  - nand_20 NAND_X1 + PLACED ( 122040 495000 ) N ;
+  - nand_21 NAND_X1 + PLACED ( 34398 909360 ) N ;
+  - nand_22 NAND_X1 + PLACED ( 258768 662400 ) N ;
+  - nand_23 NAND_X1 + PLACED ( 311688 520200 ) N ;
+  - nand_24 NAND_X1 + PLACED ( 546696 184680 ) N ;
+  - nand_25 NAND_X1 + PLACED ( 969570 775080 ) N ;
+  - nand_26 NAND_X1 + PLACED ( 939492 894960 ) N ;
+  - nand_27 NAND_X1 + PLACED ( 597888 921960 ) N ;
+  - nand_28 NAND_X1 + PLACED ( 88506 195840 ) N ;
+  - nand_29 NAND_X1 + PLACED ( 45252 325440 ) N ;
+  - nor_30 NOR_X1 + PLACED ( 388692 271440 ) N ;
+  - nor_31 NOR_X1 + PLACED ( 828738 356760 ) N ;
+  - nor_32 NOR_X1 + PLACED ( 280908 542520 ) N ;
+  - nor_33 NOR_X1 + PLACED ( 140940 802080 ) N ;
+  - nor_34 NOR_X1 + PLACED ( 74574 986760 ) N ;
+  - nor_35 NOR_X1 + PLACED ( 772254 198720 ) N ;
+  - nor_36 NOR_X1 + PLACED ( 5508 815400 ) N ;
+  - nor_37 NOR_X1 + PLACED ( 706860 729000 ) N ;
+  - nor_38 NOR_X1 + PLACED ( 771282 74160 ) N ;
+  - nor_39 NOR_X1 + PLACED ( 358452 115920 ) N ;
+  - nor_40 NOR_X1 + PLACED ( 863082 623160 ) N ;
+  - nor_41 NOR_X1 + PLACED ( 330912 63720 ) N ;
+  - nor_42 NOR_X1 + PLACED ( 310986 325080 ) N ;
+  - nor_43 NOR_X1 + PLACED ( 729594 637560 ) N ;
+  - nor_44 NOR_X1 + PLACED ( 887220 472320 ) N ;
+  - nor_45 NOR_X1 + PLACED ( 119610 713160 ) N ;
+  - nor_46 NOR_X1 + PLACED ( 760806 561240 ) N ;
+  - nor_47 NOR_X1 + PLACED ( 770958 493920 ) N ;
+  - nor_48 NOR_X1 + PLACED ( 522720 427680 ) N ;
+  - nor_49 NOR_X1 + PLACED ( 25434 108000 ) N ;
+  - and_50 AND_X1 + PLACED ( 31428 636480 ) N ;
+  - and_51 AND_X1 + PLACED ( 314334 508680 ) N ;
+  - and_52 AND_X1 + PLACED ( 907578 249120 ) N ;
+  - and_53 AND_X1 + PLACED ( 410400 755640 ) N ;
+  - and_54 AND_X1 + PLACED ( 228798 77040 ) N ;
+  - and_55 AND_X1 + PLACED ( 289764 161280 ) N ;
+  - and_56 AND_X1 + PLACED ( 929718 808200 ) N ;
+  - and_57 AND_X1 + PLACED ( 633420 871560 ) N ;
+  - and_58 AND_X1 + PLACED ( 803682 186480 ) N ;
+  - and_59 AND_X1 + PLACED ( 892566 539280 ) N ;
+  - or_60 OR_X1 + PLACED ( 807462 896040 ) N ;
+  - or_61 OR_X1 + PLACED ( 318006 110160 ) N ;
+  - or_62 OR_X1 + PLACED ( 227934 426960 ) N ;
+  - or_63 OR_X1 + PLACED ( 817992 860760 ) N ;
+  - or_64 OR_X1 + PLACED ( 6966 510840 ) N ;
+  - or_65 OR_X1 + PLACED ( 417420 222120 ) N ;
+  - or_66 OR_X1 + PLACED ( 119880 337680 ) N ;
+  - or_67 OR_X1 + PLACED ( 942894 323280 ) N ;
+  - or_68 OR_X1 + PLACED ( 518778 703080 ) N ;
+  - or_69 OR_X1 + PLACED ( 363636 971640 ) N ;
+  - xor_70 OR_X1 + PLACED ( 962442 251640 ) N ;
+  - xor_71 OR_X1 + PLACED ( 497232 300960 ) N ;
+  - xor_72 OR_X1 + PLACED ( 284850 36720 ) N ;
+  - xor_73 OR_X1 + PLACED ( 609552 502560 ) N ;
+  - xor_74 OR_X1 + PLACED ( 51462 278640 ) N ;
+  - xor_75 OR_X1 + PLACED ( 908280 239400 ) N ;
+  - xor_76 OR_X1 + PLACED ( 144882 489600 ) N ;
+  - xor_77 OR_X1 + PLACED ( 985662 241920 ) N ;
+  - xor_78 OR_X1 + PLACED ( 672138 761760 ) N ;
+  - xor_79 OR_X1 + PLACED ( 237654 728280 ) N ;
+  - dff_80 DFF_X1 + PLACED ( 367794 632160 ) N ;
+  - dff_81 DFF_X1 + PLACED ( 633528 535680 ) N ;
+  - dff_82 DFF_X1 + PLACED ( 90288 835200 ) N ;
+  - dff_83 DFF_X1 + PLACED ( 320760 186480 ) N ;
+  - dff_84 DFF_X1 + PLACED ( 40770 590760 ) N ;
+  - dff_85 DFF_X1 + PLACED ( 677538 16560 ) N ;
+  - dff_86 DFF_X1 + PLACED ( 512082 226440 ) N ;
+  - dff_87 DFF_X1 + PLACED ( 645192 174240 ) N ;
+  - dff_88 DFF_X1 + PLACED ( 690930 386640 ) N ;
+  - dff_89 DFF_X1 + PLACED ( 936738 137520 ) N ;
+  - dff_90 DFF_X1 + PLACED ( 341064 113400 ) N ;
+  - dff_91 DFF_X1 + PLACED ( 924696 877320 ) N ;
+  - dff_92 DFF_X1 + PLACED ( 257958 659880 ) N ;
+  - dff_93 DFF_X1 + PLACED ( 817236 555120 ) N ;
+  - dff_94 DFF_X1 + PLACED ( 529632 241920 ) N ;
+  - mux_95 MUX_X1 + PLACED ( 93096 897120 ) N ;
+  - mux_96 MUX_X1 + PLACED ( 900396 633240 ) N ;
+  - mux_97 MUX_X1 + PLACED ( 339012 349200 ) N ;
+  - mux_98 MUX_X1 + PLACED ( 725976 897120 ) N ;
+  - mux_99 MUX_X1 + PLACED ( 887112 779760 ) N ;
+END COMPONENTS
+
+NETS 99 ;
+  - net_0
+      ( nand_6 Y )
+      ( or_65 A )
+      ( or_65 A )
+      ( nor_34 A )
+      ( nor_37 A )
+      ( dff_84 A ) ;
+  - net_5
+      ( nand_24 Y )
+      ( nor_43 A )
+      ( nor_43 A )
+      ( nor_34 A )
+      ( dff_82 A )
+      ( nor_43 A ) ;
+  - net_10
+      ( nand_5 Y )
+      ( nand_7 A )
+      ( nor_37 A )
+      ( or_65 A )
+      ( nor_43 A )
+      ( dff_84 A ) ;
+  - net_15
+      ( nor_37 Y )
+      ( dff_82 A )
+      ( or_65 A )
+      ( dff_82 A )
+      ( dff_82 A )
+      ( nor_34 A ) ;
+  - net_20
+      ( dff_84 Y )
+      ( mux_99 A )
+      ( nor_34 A )
+      ( nor_34 A )
+      ( nor_43 A )
+      ( or_65 A ) ;
+  - net_25
+      ( nor_34 Y )
+      ( dff_82 A )
+      ( nand_7 A )
+      ( xor_71 A )
+      ( mux_99 A )
+      ( mux_99 A ) ;
+  - net_30
+      ( dff_82 Y )
+      ( or_69 A )
+      ( nand_7 A )
+      ( or_65 A )
+      ( nand_14 A )
+      ( nand_7 A ) ;
+  - net_35
+      ( or_69 Y )
+      ( nand_14 A )
+      ( nand_14 A )
+      ( or_64 A )
+      ( nand_14 A )
+      ( or_65 A ) ;
+  - net_40
+      ( nand_14 Y )
+      ( or_65 A )
+      ( mux_99 A ) ;
+  - net_42
+      ( or_65 Y )
+      ( nand_10 A )
+      ( nand_7 A )
+      ( xor_71 A )
+      ( nor_43 A )
+      ( and_58 A ) ;
+  - net_47
+      ( nor_43 Y )
+      ( nor_49 A )
+      ( xor_72 A )
+      ( nand_10 A )
+      ( nand_7 A )
+      ( and_58 A ) ;
+  - net_52
+      ( nand_7 Y )
+      ( and_58 A )
+      ( xor_72 A )
+      ( nand_10 A )
+      ( nand_26 A )
+      ( nor_49 A ) ;
+  - net_57
+      ( xor_71 Y )
+      ( xor_72 A )
+      ( nand_17 A )
+      ( and_58 A )
+      ( nand_17 A )
+      ( nand_17 A ) ;
+  - net_62
+      ( mux_99 Y )
+      ( nand_10 A )
+      ( and_58 A )
+      ( nand_10 A ) ;
+  - net_65
+      ( and_58 Y )
+      ( nand_17 A )
+      ( nand_17 A )
+      ( or_64 A )
+      ( nand_10 A )
+      ( nand_19 A ) ;
+  - net_70
+      ( nand_26 Y )
+      ( dff_89 A )
+      ( xor_72 A )
+      ( nand_10 A )
+      ( nand_17 A )
+      ( nand_19 A ) ;
+  - net_75
+      ( or_64 Y )
+      ( nand_17 A )
+      ( nand_19 A )
+      ( dff_89 A )
+      ( nand_19 A )
+      ( dff_89 A ) ;
+  - net_80
+      ( nand_10 Y )
+      ( nand_2 A )
+      ( and_53 A )
+      ( nand_19 A )
+      ( nand_17 A )
+      ( xor_72 A ) ;
+  - net_85
+      ( xor_72 Y )
+      ( nand_2 A )
+      ( nand_2 A )
+      ( nand_19 A )
+      ( nor_44 A )
+      ( nor_42 A ) ;
+  - net_90
+      ( nor_49 Y )
+      ( nor_44 A )
+      ( dff_89 A )
+      ( and_53 A )
+      ( dff_89 A )
+      ( nand_19 A ) ;
+  - net_95
+      ( nand_2 Y )
+      ( nand_23 A )
+      ( nand_19 A )
+      ( nand_19 A )
+      ( nand_23 A )
+      ( dff_89 A ) ;
+  - net_100
+      ( nand_17 Y )
+      ( nor_44 A )
+      ( nor_42 A )
+      ( and_53 A )
+      ( nand_1 A )
+      ( nand_1 A ) ;
+  - net_105
+      ( and_53 Y )
+      ( nand_3 A )
+      ( nand_3 A )
+      ( nand_3 A )
+      ( dff_92 A )
+      ( nand_3 A ) ;
+  - net_110
+      ( nand_19 Y )
+      ( nand_23 A )
+      ( nor_44 A )
+      ( nor_40 A )
+      ( and_52 A )
+      ( dff_92 A ) ;
+  - net_115
+      ( dff_89 Y )
+      ( nand_1 A )
+      ( nor_44 A )
+      ( xor_75 A )
+      ( nand_3 A )
+      ( nand_1 A ) ;
+  - net_120
+      ( nand_1 Y )
+      ( dff_92 A )
+      ( xor_75 A )
+      ( nor_42 A )
+      ( nor_40 A )
+      ( xor_75 A ) ;
+  - net_125
+      ( nor_42 Y )
+      ( and_52 A )
+      ( nand_23 A )
+      ( nor_44 A )
+      ( nor_40 A )
+      ( nand_3 A ) ;
+  - net_130
+      ( nor_44 Y )
+      ( and_52 A )
+      ( dff_87 A )
+      ( nor_31 A )
+      ( nor_31 A )
+      ( dff_87 A ) ;
+  - net_135
+      ( nand_23 Y )
+      ( nor_40 A )
+      ( nor_31 A )
+      ( dff_87 A )
+      ( dff_87 A )
+      ( and_52 A ) ;
+  - net_140
+      ( and_52 Y )
+      ( dff_92 A )
+      ( nor_41 A )
+      ( nor_31 A )
+      ( xor_77 A )
+      ( nor_40 A ) ;
+  - net_145
+      ( nand_3 Y )
+      ( and_59 A )
+      ( and_59 A )
+      ( nor_41 A )
+      ( nor_31 A )
+      ( nor_40 A ) ;
+  - net_150
+      ( dff_92 Y )
+      ( nor_40 A )
+      ( nor_30 A )
+      ( xor_77 A )
+      ( nor_30 A ) ;
+  - net_154
+      ( nor_40 Y )
+      ( xor_77 A )
+      ( dff_87 A )
+      ( dff_87 A )
+      ( nor_30 A )
+      ( nor_41 A ) ;
+  - net_159
+      ( xor_75 Y )
+      ( nor_30 A )
+      ( nor_30 A )
+      ( dff_87 A )
+      ( dff_87 A )
+      ( dff_83 A ) ;
+  - net_164
+      ( nor_31 Y )
+      ( nor_30 A )
+      ( nor_41 A )
+      ( and_59 A )
+      ( dff_87 A )
+      ( nor_36 A ) ;
+  - net_169
+      ( dff_87 Y )
+      ( dff_83 A )
+      ( dff_85 A )
+      ( dff_83 A )
+      ( dff_85 A )
+      ( xor_77 A ) ;
+  - net_174
+      ( nor_41 Y )
+      ( xor_77 A )
+      ( xor_79 A )
+      ( nor_36 A )
+      ( xor_79 A )
+      ( dff_83 A ) ;
+  - net_179
+      ( nor_30 Y )
+      ( xor_79 A )
+      ( and_59 A )
+      ( dff_85 A )
+      ( nand_9 A )
+      ( xor_77 A ) ;
+  - net_184
+      ( xor_77 Y )
+      ( dff_85 A )
+      ( nor_36 A )
+      ( and_59 A )
+      ( nor_38 A )
+      ( nor_38 A ) ;
+  - net_189
+      ( and_59 Y )
+      ( nor_36 A )
+      ( nor_38 A )
+      ( nor_32 A )
+      ( nand_9 A )
+      ( nand_20 A ) ;
+  - net_194
+      ( dff_85 Y )
+      ( nor_36 A )
+      ( nand_20 A )
+      ( xor_76 A )
+      ( nor_32 A )
+      ( xor_76 A ) ;
+  - net_199
+      ( nand_9 Y )
+      ( xor_76 A )
+      ( nor_36 A )
+      ( nor_38 A )
+      ( nor_35 A ) ;
+  - net_203
+      ( dff_83 Y )
+      ( nor_36 A )
+      ( nor_32 A )
+      ( nor_36 A )
+      ( or_67 A )
+      ( or_67 A ) ;
+  - net_208
+      ( nor_36 Y )
+      ( nand_20 A )
+      ( nor_32 A )
+      ( and_55 A )
+      ( xor_79 A )
+      ( or_67 A ) ;
+  - net_213
+      ( xor_79 Y )
+      ( nand_20 A )
+      ( nand_20 A )
+      ( nor_32 A )
+      ( nor_32 A )
+      ( nor_32 A ) ;
+  - net_218
+      ( nor_32 Y )
+      ( nor_35 A )
+      ( nand_20 A )
+      ( xor_70 A )
+      ( nor_38 A )
+      ( nor_35 A ) ;
+  - net_223
+      ( nor_35 Y )
+      ( or_67 A )
+      ( or_67 A )
+      ( xor_70 A )
+      ( or_67 A )
+      ( nor_38 A ) ;
+  - net_228
+      ( nor_38 Y )
+      ( xor_70 A )
+      ( xor_76 A )
+      ( and_55 A )
+      ( xor_70 A )
+      ( and_55 A ) ;
+  - net_233
+      ( nand_20 Y )
+      ( xor_70 A )
+      ( xor_73 A )
+      ( xor_73 A ) ;
+  - net_236
+      ( xor_76 Y )
+      ( or_67 A )
+      ( dff_94 A )
+      ( nor_48 A )
+      ( dff_94 A )
+      ( dff_94 A ) ;
+  - net_241
+      ( and_55 Y )
+      ( nor_45 A )
+      ( xor_73 A )
+      ( nor_48 A ) ;
+  - net_244
+      ( or_67 Y )
+      ( dff_94 A )
+      ( nor_48 A )
+      ( nor_48 A )
+      ( dff_81 A ) ;
+  - net_248
+      ( xor_70 Y )
+      ( nand_4 A )
+      ( nor_45 A )
+      ( mux_97 A )
+      ( nor_45 A )
+      ( nor_48 A ) ;
+  - net_253
+      ( dff_81 Y )
+      ( nand_13 A )
+      ( nor_45 A )
+      ( dff_91 A )
+      ( nand_4 A )
+      ( nor_45 A ) ;
+  - net_258
+      ( xor_73 Y )
+      ( dff_91 A )
+      ( nand_4 A )
+      ( dff_94 A )
+      ( dff_94 A )
+      ( nand_13 A ) ;
+  - net_263
+      ( dff_94 Y )
+      ( nand_27 A )
+      ( nor_48 A )
+      ( nand_27 A )
+      ( nor_48 A )
+      ( nand_28 A ) ;
+  - net_268
+      ( nor_45 Y )
+      ( and_50 A )
+      ( and_56 A )
+      ( nand_4 A )
+      ( nand_13 A )
+      ( and_50 A ) ;
+  - net_273
+      ( dff_91 Y )
+      ( xor_74 A )
+      ( nand_27 A )
+      ( nor_48 A )
+      ( nand_28 A )
+      ( xor_74 A ) ;
+  - net_278
+      ( nor_48 Y )
+      ( nand_28 A )
+      ( mux_97 A )
+      ( and_56 A )
+      ( nand_28 A )
+      ( nand_27 A ) ;
+  - net_283
+      ( mux_97 Y )
+      ( nand_27 A )
+      ( and_50 A )
+      ( nand_28 A )
+      ( xor_74 A )
+      ( and_56 A ) ;
+  - net_288
+      ( nand_4 Y )
+      ( or_66 A )
+      ( and_56 A )
+      ( nand_28 A )
+      ( and_50 A )
+      ( nand_21 A ) ;
+  - net_293
+      ( nand_27 Y )
+      ( nand_25 A )
+      ( or_68 A )
+      ( nand_13 A )
+      ( nand_25 A )
+      ( xor_74 A ) ;
+  - net_298
+      ( nand_13 Y )
+      ( and_50 A )
+      ( and_56 A )
+      ( and_50 A )
+      ( or_68 A )
+      ( or_66 A ) ;
+  - net_303
+      ( nand_28 Y )
+      ( or_68 A )
+      ( and_50 A )
+      ( or_66 A )
+      ( or_68 A )
+      ( or_66 A ) ;
+  - net_308
+      ( and_56 Y )
+      ( nand_21 A )
+      ( nand_25 A )
+      ( or_66 A )
+      ( xor_74 A )
+      ( or_66 A ) ;
+  - net_313
+      ( and_50 Y )
+      ( nand_21 A )
+      ( or_63 A )
+      ( or_60 A )
+      ( or_63 A )
+      ( or_68 A ) ;
+  - net_318
+      ( xor_74 Y )
+      ( nand_21 A )
+      ( or_60 A )
+      ( or_66 A )
+      ( nand_25 A )
+      ( dff_88 A ) ;
+  - net_323
+      ( nand_25 Y )
+      ( or_68 A )
+      ( nor_47 A )
+      ( nor_47 A )
+      ( nand_21 A ) ;
+  - net_327
+      ( or_66 Y )
+      ( dff_88 A )
+      ( mux_98 A )
+      ( xor_78 A )
+      ( or_63 A )
+      ( nand_21 A ) ;
+  - net_332
+      ( nand_21 Y )
+      ( nor_33 A )
+      ( xor_78 A )
+      ( or_63 A )
+      ( dff_88 A )
+      ( dff_88 A ) ;
+  - net_337
+      ( or_68 Y )
+      ( dff_86 A )
+      ( dff_88 A )
+      ( dff_80 A )
+      ( nor_33 A )
+      ( dff_80 A ) ;
+  - net_342
+      ( dff_88 Y )
+      ( xor_78 A )
+      ( or_60 A )
+      ( nand_0 A )
+      ( nand_0 A )
+      ( mux_98 A ) ;
+  - net_347
+      ( or_63 Y )
+      ( dff_80 A )
+      ( dff_86 A )
+      ( nand_11 A )
+      ( xor_78 A )
+      ( mux_98 A ) ;
+  - net_352
+      ( or_60 Y )
+      ( dff_80 A )
+      ( nand_8 A )
+      ( nor_33 A )
+      ( dff_86 A )
+      ( xor_78 A ) ;
+  - net_357
+      ( mux_98 Y )
+      ( nor_47 A )
+      ( nand_8 A )
+      ( nand_11 A )
+      ( nor_33 A ) ;
+  - net_361
+      ( xor_78 Y )
+      ( dff_86 A )
+      ( nand_11 A )
+      ( nand_0 A )
+      ( dff_80 A )
+      ( nand_11 A ) ;
+  - net_366
+      ( nor_47 Y )
+      ( nand_11 A )
+      ( or_61 A )
+      ( nor_33 A )
+      ( dff_80 A )
+      ( nand_11 A ) ;
+  - net_371
+      ( nor_33 Y )
+      ( nand_11 A )
+      ( dff_86 A )
+      ( and_57 A )
+      ( nand_22 A )
+      ( dff_80 A ) ;
+  - net_376
+      ( dff_80 Y )
+      ( mux_96 A )
+      ( or_61 A )
+      ( dff_86 A )
+      ( and_57 A )
+      ( nand_22 A ) ;
+  - net_381
+      ( dff_86 Y )
+      ( dff_90 A )
+      ( nand_0 A )
+      ( or_61 A )
+      ( nand_22 A )
+      ( nand_8 A ) ;
+  - net_386
+      ( nand_0 Y )
+      ( nand_11 A )
+      ( or_62 A )
+      ( nand_8 A )
+      ( nand_22 A )
+      ( or_61 A ) ;
+  - net_391
+      ( nand_11 Y )
+      ( nand_8 A )
+      ( or_62 A )
+      ( nand_16 A )
+      ( nand_18 A )
+      ( mux_96 A ) ;
+  - net_396
+      ( nand_8 Y )
+      ( nand_18 A )
+      ( nand_16 A )
+      ( or_62 A )
+      ( nand_29 A )
+      ( or_61 A ) ;
+  - net_401
+      ( nand_22 Y )
+      ( nand_16 A )
+      ( nand_18 A )
+      ( nand_12 A )
+      ( nand_29 A )
+      ( nand_29 A ) ;
+  - net_406
+      ( or_61 Y )
+      ( nand_15 A )
+      ( nand_15 A )
+      ( nand_18 A )
+      ( nand_18 A )
+      ( nand_15 A ) ;
+  - net_411
+      ( mux_96 Y )
+      ( nand_18 A )
+      ( nand_29 A )
+      ( nand_18 A )
+      ( nand_16 A )
+      ( nand_16 A ) ;
+  - net_416
+      ( and_57 Y )
+      ( and_51 A )
+      ( or_62 A )
+      ( nand_16 A )
+      ( nand_16 A )
+      ( nand_12 A ) ;
+  - net_421
+      ( dff_90 Y )
+      ( and_54 A )
+      ( or_62 A )
+      ( nand_29 A )
+      ( nand_15 A )
+      ( and_51 A ) ;
+  - net_426
+      ( or_62 Y )
+      ( and_51 A )
+      ( nand_16 A )
+      ( nand_29 A )
+      ( nand_29 A )
+      ( nand_29 A ) ;
+  - net_431
+      ( nand_16 Y )
+      ( dff_93 A )
+      ( dff_93 A )
+      ( nor_46 A )
+      ( and_51 A )
+      ( nor_39 A ) ;
+  - net_436
+      ( nand_18 Y )
+      ( and_51 A )
+      ( and_51 A )
+      ( mux_95 A )
+      ( nand_12 A )
+      ( nor_46 A ) ;
+  - net_441
+      ( nand_29 Y )
+      ( dff_93 A )
+      ( mux_95 A )
+      ( and_51 A )
+      ( mux_95 A )
+      ( nand_12 A ) ;
+  - net_446
+      ( nand_12 Y )
+      ( dff_93 A )
+      ( and_51 A )
+      ( dff_93 A )
+      ( nor_46 A )
+      ( dff_93 A ) ;
+  - net_451
+      ( nand_15 Y )
+      ( and_51 A )
+      ( mux_95 A )
+      ( nor_46 A )
+      ( mux_95 A )
+      ( mux_95 A ) ;
+  - net_456
+      ( and_51 Y )
+      ( nor_46 A )
+      ( nor_39 A )
+      ( nor_46 A )
+      ( dff_93 A )
+      ( and_54 A ) ;
+  - net_461
+      ( nor_39 Y )
+      ( mux_95 A )
+      ( mux_95 A )
+      ( mux_95 A )
+      ( nor_46 A )
+      ( dff_93 A ) ;
+  - net_466
+      ( and_54 Y )
+      ( mux_95 A )
+      ( mux_95 A )
+      ( mux_95 A )
+      ( mux_95 A )
+      ( mux_95 A ) ;
+  - net_471
+      ( nor_46 Y )
+      ( mux_95 A )
+      ( mux_95 A )
+      ( mux_95 A )
+      ( mux_95 A )
+      ( mux_95 A ) ;
+  - net_476
+      ( dff_93 Y )
+      ( mux_95 A )
+      ( mux_95 A )
+      ( mux_95 A )
+      ( mux_95 A )
+      ( mux_95 A ) ;
+END NETS
+
+END DESIGN
