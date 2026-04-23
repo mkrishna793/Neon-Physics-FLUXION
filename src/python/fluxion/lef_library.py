@@ -2,7 +2,7 @@
 FLUXION LEF Library Definitions
 
 Provides physical dimension approximations for standard cells
-across different technology nodes (3nm, 7nm, 14nm, 28nm).
+across different technology nodes (2nm, 3nm, 7nm, 14nm, 28nm).
 
 In a full production flow, this would parse a real .lef file from a foundry.
 For FLUXION, we use accurate dimension estimates to power the legalizer.
@@ -31,7 +31,7 @@ class LEFLibrary:
         Initialize LEF library for a specific technology node.
         
         Args:
-            node: Tech node string ("3nm", "7nm", "14nm", "28nm")
+            node: Tech node string ("2nm", "3nm", "7nm", "14nm", "28nm")
             dbu_per_micron: Database units per micron
         """
         self.node = node
