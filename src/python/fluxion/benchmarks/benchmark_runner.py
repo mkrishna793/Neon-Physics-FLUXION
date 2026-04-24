@@ -125,6 +125,39 @@ class BenchmarkRunner:
 
         start = time.time()
         result = engine.optimize()
+
+        if getattr(self, 'legalize', False):
+            print("Running legalizer...")
+            from fluxion.legalizer import TetrisLegalizer, Z3HotspotSolver
+            from fluxion.grid import PlacementGrid
+            from fluxion.lef_library import LEFLibrary
+            lef_lib = LEFLibrary(node="14nm")
+            grid = PlacementGrid(circuit.die_width, circuit.die_height, lef_lib)
+            legalizer = TetrisLegalizer(grid)
+            success_count, failed_ids = legalizer.legalize(circuit)
+
+            print(f"Tetris legalization left {len(failed_ids)} hotspots.")
+            if failed_ids:
+                z3 = Z3HotspotSolver(grid)
+                # Group all failed into one region for simplicity in benchmark mode
+                # Ensure we only check valid IDs
+                valid_ids = [pid for pid in failed_ids if pid in circuit.particles]
+                if not valid_ids:
+                    print("Legalization complete.")
+                    runtime = time.time() - start
+                    metrics = self._compute_metrics(circuit, result, runtime, path.stem)
+                    metrics.annealing_steps = self.steps
+                    metrics.ms_per_step = (runtime / self.steps) * 1000 if self.steps else 0
+                    return metrics
+                x_coords = [circuit.particles[pid].x for pid in valid_ids]
+                y_coords = [circuit.particles[pid].y for pid in valid_ids]
+                min_x = min(x_coords)-1
+                min_y = min(y_coords)-1
+                max_x = max(x_coords)+1
+                max_y = max(y_coords)+1
+                z3.solve_region(circuit, failed_ids, min_x, min_y, max_x - min_x, max_y - min_y)
+            print("Legalization complete.")
+
         runtime = time.time() - start
 
         # 3. Compute metrics

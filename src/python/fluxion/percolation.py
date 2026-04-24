@@ -67,15 +67,25 @@ class ThermalPercolationChecker:
         n_hot = len(hot_gates)
         adj_list = {i: [] for i in range(n_hot)}
         
-        # O(N^2) for hot gates, usually small enough
-        for i in range(n_hot):
-            p1 = hot_gates[i]
-            for j in range(i + 1, n_hot):
-                p2 = hot_gates[j]
-                dist = np.sqrt((p1.x - p2.x)**2 + (p1.y - p2.y)**2)
-                if dist <= self.connection_radius:
+        # KDTree for O(N log N) distance queries instead of O(N^2) square distance matrix memory explosion
+        if n_hot > 0:
+            coords = np.array([[p.x, p.y] for p in hot_gates])
+            try:
+                from scipy.spatial import KDTree
+                tree = KDTree(coords)
+                pairs = tree.query_pairs(self.connection_radius)
+                for i, j in pairs:
                     adj_list[i].append(j)
                     adj_list[j].append(i)
+            except ImportError:
+                for i in range(n_hot):
+                    p1_coord = coords[i]
+                    diffs = coords[i+1:] - p1_coord
+                    dists_sq = np.sum(diffs**2, axis=1)
+                    connected_indices = np.where(dists_sq <= self.connection_radius**2)[0] + i + 1
+                    for j in connected_indices:
+                        adj_list[i].append(int(j))
+                        adj_list[int(j)].append(i)
 
         # 3. Find connected components (clusters)
         visited = set()

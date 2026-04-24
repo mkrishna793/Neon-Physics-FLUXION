@@ -109,16 +109,30 @@ In **V3**, we introduced **Thermodynamic Discovery Mode**:
 
 ---
 
-## ⚙️ How to Demo the Industry Benchmarks
-You can immediately verify FLUXION V3 using standard academic benchmarks:
 
+## ⚙️ Benchmarking & Kaggle Deployment
+
+FLUXION supports running standard benchmarks out of the box.
+
+If running locally on CPU without OpenCL, be sure to compile the fast C++ bindings first:
 ```bash
-# Generate a quick generic placement footprint matching ISPD Bookshelf specifications to test your engine locally
-python benchmarks/run_industry_benchmarks.py --generate-sample --sample-format bookshelf --sample-size 1000 --steps 500
+# Ensure dependencies are installed
+pip install numpy scipy pybind11 cmake z3-solver
 
-# Run FLUXION against a downloaded ICCAD (LEF/DEF) or ISPD (Bookshelf) benchmark suite folder
-python benchmarks/run_industry_benchmarks.py --dir /path/to/extracted/suite --steps 5000 --discovery
+# Compile bindings
+python setup.py build_ext --inplace
 ```
+
+### Running the ISPD/ICCAD Benchmarks
+```bash
+# Evaluate a specific benchmark
+python benchmarks/run_industry_benchmarks.py --file /path/to/NV_NVDLA_partition_m.def --format lefdef --steps 500 --legalize
+```
+
+### Kaggle T4 x 2 Large-Scale Deployment
+If you are running large 500k+ cell designs (e.g., `ariane136`), the CPU engine will hit memory/timeout walls. FLUXION ships with a Kaggle notebook preset (`examples/kaggle/kaggle_fluxion_run.ipynb`) configured for T4 GPU nodes. Upload it to Kaggle to replicate the GPU tests!
+
+
 
 ---
 

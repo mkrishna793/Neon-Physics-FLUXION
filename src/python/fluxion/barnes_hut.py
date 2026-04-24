@@ -259,47 +259,39 @@ class BarnesHutTree:
         px: float, py: float, charge: float,
         k: float, min_dist: float,
     ) -> Tuple[float, float, float]:
-        """Compute force on a single particle from a tree node."""
-        if node is None or node.is_empty:
-            return 0.0, 0.0, 0.0
+        """Compute force on a single particle from a tree node using iteration."""
+        total_fx, total_fy, total_energy = 0.0, 0.0, 0.0
 
-        # If this is a leaf containing only this particle, skip
-        if node.is_leaf and node.particle_idx == particle_idx:
-            return 0.0, 0.0, 0.0
+        stack = [node]
 
-        dx = node.cx - px
-        dy = node.cy - py
-        dist = np.sqrt(dx * dx + dy * dy)
-        dist = max(dist, min_dist)
+        while stack:
+            curr = stack.pop()
 
-        # Barnes-Hut criterion: if node is far enough, use approximation
-        if node.is_leaf or (node.size / dist < self.theta):
-            # Treat entire node as single point mass
-            force_mag = k * charge * node.total_charge / (dist * dist)
+            if curr is None or curr.is_empty:
+                continue
 
-            # Repulsion: force away from cluster center
-            fx = -force_mag * dx / dist
-            fy = -force_mag * dy / dist
+            # If this is a leaf containing only this particle, skip
+            if curr.is_leaf and curr.particle_idx == particle_idx:
+                continue
 
-            energy = k * charge * node.total_charge / dist
+            dx = curr.cx - px
+            dy = curr.cy - py
+            dist = np.sqrt(dx * dx + dy * dy)
+            dist = max(dist, min_dist)
 
-            return fx, fy, energy
-        else:
-            # Node is too close: recurse into children
-            total_fx, total_fy, total_energy = 0.0, 0.0, 0.0
+            # Barnes-Hut criterion
+            if curr.is_leaf or (curr.size / dist < self.theta):
+                force_mag = k * charge * curr.total_charge / (dist * dist)
+                total_fx -= force_mag * dx / dist
+                total_fy -= force_mag * dy / dist
+                total_energy += k * charge * curr.total_charge / dist
+            else:
+                if curr.children is not None:
+                    for child in curr.children:
+                        if child is not None and not child.is_empty:
+                            stack.append(child)
 
-            if node.children is not None:
-                for child in node.children:
-                    if child is not None and not child.is_empty:
-                        fx, fy, energy = self._compute_force_on_particle(
-                            child, particle_idx, px, py, charge,
-                            k, min_dist
-                        )
-                        total_fx += fx
-                        total_fy += fy
-                        total_energy += energy
-
-            return total_fx, total_fy, total_energy
+        return total_fx, total_fy, total_energy
 
     def get_stats(self) -> dict:
         """Get tree statistics for debugging."""

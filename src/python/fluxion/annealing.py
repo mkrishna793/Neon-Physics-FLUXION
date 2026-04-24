@@ -364,7 +364,7 @@ class ThermodynamicAnnealing:
                 callback(step, temperature, energy, positions)
 
             # Progress report
-            if verbose and (step + 1) % (total_steps // 10) == 0:
+            if verbose and (step + 1) % max(1, total_steps // 10) == 0:
                 print(f"Step {step+1}/{total_steps}: T={temperature:.4f}, "
                       f"E={energy:.2f}, Best={self.state.best_energy:.2f}, "
                       f"Acc={self.state.acceptance_rate:.2%}")
@@ -433,7 +433,7 @@ class ThermodynamicAnnealing:
             self.state.record_step(current_energy, temperature)
 
             # Progress
-            if verbose and (step + 1) % (total_steps // 10) == 0:
+            if verbose and (step + 1) % max(1, total_steps // 10) == 0:
                 print(f"Step {step+1}/{total_steps}: T={temperature:.4f}, "
                       f"E={current_energy:.2f}, Best={self.state.best_energy:.2f}")
 

@@ -160,6 +160,8 @@ def main():
                         help="Format for generated sample")
     parser.add_argument("--sample-size", type=int, default=200,
                         help="Number of cells/gates in generated sample")
+    parser.add_argument("--legalize", action="store_true",
+                        help="Run exact Z3 SAT legalizer after placement")
 
     args = parser.parse_args()
 
@@ -170,6 +172,7 @@ def main():
         adaptive_weights=args.adaptive,
         seed=args.seed,
     )
+    runner.legalize = args.legalize
 
     all_metrics = []
 

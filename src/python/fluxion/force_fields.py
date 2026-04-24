@@ -264,13 +264,20 @@ class ThermalRepulsionForce(ForceField):
 
         # For large designs (N > 5000), use O(N log N) Barnes-Hut
         if n > 5000:
-            if self.barnes_hut_cache is None:
-                self.barnes_hut_cache = BarnesHutTree(theta=0.5)
-            
-            self.barnes_hut_cache.build(positions, charges)
-            forces, total_energy = self.barnes_hut_cache.compute_repulsion_forces(
-                positions, charges, self.thermal_constant, self.min_distance
-            )
+            try:
+                # Try using the compiled C++ extension for speed!
+                from fluxion_engine import compute_barnes_hut_forces
+                forces, total_energy = compute_barnes_hut_forces(
+                    positions, charges, self.thermal_constant, self.min_distance, 0.5
+                )
+            except ImportError:
+                if self.barnes_hut_cache is None:
+                    self.barnes_hut_cache = BarnesHutTree(theta=1.0)
+
+                self.barnes_hut_cache.build(positions, charges)
+                forces, total_energy = self.barnes_hut_cache.compute_repulsion_forces(
+                    positions, charges, self.thermal_constant, self.min_distance
+                )
             max_force = np.max(np.linalg.norm(forces, axis=1)) if len(forces) > 0 else 0.0
             
             perc_result = self.percolation_checker.analyze(system)
@@ -330,7 +337,7 @@ class ThermalRepulsionForce(ForceField):
 
         if n > 5000:
             if self.barnes_hut_cache is None:
-                self.barnes_hut_cache = BarnesHutTree(theta=0.5)
+                self.barnes_hut_cache = BarnesHutTree(theta=1.0)
             self.barnes_hut_cache.build(positions, charges)
             _, total_energy = self.barnes_hut_cache.compute_repulsion_forces(
                 positions, charges, self.thermal_constant, self.min_distance
