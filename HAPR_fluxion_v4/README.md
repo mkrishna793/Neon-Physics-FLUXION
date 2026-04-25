@@ -1,148 +1,91 @@
-# HAPR Engine Blueprint
+# FLUXION v4: HAPR Engine
 
-## What Is It
-A chip placement engine. Takes a circuit file, places all gates on a chip, outputs the placement. Competes with Cadence Innovus and Synopsys ICC2.
+![FLUXION](https://img.shields.io/badge/FLUXION-v4-blue) ![HAPR](https://img.shields.io/badge/Algorithm-HAPR-orange) ![WebGPU](https://img.shields.io/badge/Compute-WebGPU-brightgreen)
 
-## The Algorithm: HAPR (Hierarchical Attention Placement with Routing)
-6 steps, that's the entire algorithm:
+A massive-scale, high-performance chip placement engine. FLUXION takes a raw circuit file, calculates the optimal physical location for every logic gate on a silicon chip to minimize wire length and congestion, and outputs the final placement coordinates.
 
-1. **PARSE**: Read circuit file (BLIF or DEF)
-2. **PARTITION**: Split gates into clusters recursively until each group has ~64 gates
-3. **ATTEND**: For each cluster pair, score how connected they are (0 to 1)
-4. **PLACE**: Big clusters first, small clusters inside, individual gates last
-5. **ROUTE**: Predict wire congestion, push gates away from crowded areas
-6. **LEGALIZE**: Snap to grid using Z3 solver, no overlaps
+It is built to compete with commercial EDA physical synthesis tools (like Cadence Innovus and Synopsys ICC2) through modern algorithms and hardware-agnostic GPU acceleration.
 
-## Three-Level Architecture
+---
+
+## 🧠 The Algorithm: HAPR
+
+**HAPR (Hierarchical Attention Placement with Routing)** is a novel physical synthesis algorithm designed to place millions of gates without falling into local minima or taking days to compute.
+
+It operates strictly in 6 sequential steps:
+
+### 1. PARSE
+The engine ingests standard EDA circuit files (like BLIF or DEF). It constructs a highly optimized, flat-array structure in memory where gates, pins, and nets are represented as SIMD-friendly indices.
+
+### 2. PARTITION (The "Camera Zoom")
+You cannot place 1 million gates simultaneously. HAPR solves this by recursively slicing the circuit graph into smaller, highly-connected clusters.
+* **Mechanism**: It constructs a graph Laplacian matrix and uses Power Iteration to find the Fiedler Vector. Splitting on the Fiedler value perfectly bisects the graph while cutting the minimum number of wires.
+* **Result**: A tree hierarchy where 1,000,000 gates → 500 clusters → 10,000 subclusters → 64-gate leaves.
+
+### 3. ATTEND (The Attention Mechanism)
+Instead of a neural network, HAPR uses a deterministic graph-attention formula to establish spatial relationships between clusters.
+* **Formula**: `Attention(A→B) = shared_wires / total_wires`.
+* If Cluster A shares 60% of its wires with Cluster B, it has an attention score of `0.6`. This score acts as a rigid attractive spring during physical placement, guaranteeing that heavily connected logic is kept physically close.
+
+### 4. PLACE (Top-Down Physical Embedding)
+Placement occurs hierarchically:
+* **Level 0 (Macro)**: The top 500 clusters are placed onto the chip bounds using Spectral Embedding based on their attention scores.
+* **Level N (Micro)**: Individual gates within the smallest clusters are placed using a **Force-Directed** algorithm. 
+  * *ATTRACT*: Connected gates pull each other together.
+  * *REPEL*: Overlapping gates push each other apart.
+
+### 5. ROUTE (Congestion Prediction)
+Before finalizing the layout, HAPR predicts where wires will actually be routed.
+* **Mechanism**: It projects virtual wires between connected gates onto a 2D routing grid, counting bounding-box crossings per cell. 
+* **Refinement**: Overcrowded cells (hotspots) are identified, and gates inside them are pushed outward toward cooler neighbor cells. This prevents the #1 failure mode in chip design: unroutable congestion.
+
+### 6. LEGALIZE
+Floating-point coordinates (`x=100.34`, `y=55.71`) are useless to a silicon foundry. 
+* **Mechanism**: A Z3 solver or bipartite matching algorithm snaps the floating-point gates to precise integer coordinates on the standard cell rows, ensuring absolutely zero overlap while minimizing displacement from the ideal HAPR layout.
+
+---
+
+## 🏗️ Three-Level Architecture
+
+FLUXION v4 is split into three strict layers to isolate complexity.
 
 ### LEVEL 1 — Python (User Interface)
-CLI, config loading, visualization, Z3 legalization
-Thin layer. No heavy math here.
-Files: `cli.py`, `config.py`, `visualizer.py`, `legalizer.py`
+* **Purpose**: CLI, Configuration, Legalization, Visualization.
+* **Why**: Python is excellent for interacting with users, parsing YAML configs, and interfacing with tools like the Z3 solver or Matplotlib. No heavy math happens here.
+* **Files**: `engine.py`, `legalizer.py`, `cli.py`
 
 ### LEVEL 2 — Rust (Engine Core)
-Parsing, partitioning, attention scoring, placement logic, congestion prediction, refinement loop, I/O
-This is where the algorithm lives.
-Files: `parser.rs`, `partitioner.rs`, `attention.rs`, `placer.rs`, `congestion.rs`, `refiner.rs`, `exporter.rs`
+* **Purpose**: The HAPR algorithm lives here. Parsing, partitioning, attention scoring, and orchestration.
+* **Why**: Rust provides C-level performance with total memory safety. By avoiding Python's GIL, Rust can partition a 1M gate circuit across 32 CPU cores instantly.
+* **Files**: `partitioner.rs`, `attention.rs`, `placer.rs`, `congestion.rs`
 
 ### LEVEL 3 — GPU (Compute)
-Force computation, congestion grid counting, parallel sort
-Uses WebGPU (wgpu). Runs on ANY GPU: NVIDIA, AMD, Intel, Apple.
-Files: `forces.wgsl`, `congestion.wgsl`, `sort.wgsl`
+* **Purpose**: Massive parallel math (Forces, Congestion Grid Counting, Bitonic Sorts).
+* **Why**: Uses `wgpu` (WebGPU standard). This allows FLUXION to run on **ANY GPU** without CUDA. It compiles down to Vulkan (NVIDIA/AMD/Linux), DX12 (Windows), or Metal (Apple M1/M2/M3).
+* **Files**: `forces.wgsl`, `congestion.wgsl`, `sort.wgsl`
 
-## How Partitioning Works
-Take all gates (e.g., 1 million)
-Split into 2 groups based on connectivity (connected gates together)
-Split each group into 2 again
-Repeat until each group has ~64 gates
+---
 
-**Result:** A tree
-1,000,000 gates → 500 clusters → 1000 subclusters → 16000 leaves
+## 🚀 Quick Start & Testing
 
-**Why:** Never place 1M gates at once. Place 500 clusters, then refine.
+You do not need a complex cloud environment to test the engine. 
 
-## How Attention Works
-For every pair of clusters, ask: "How many wires connect us?"
+### 1. Prerequisites
+Ensure you have the Rust compiler installed on your machine.
+* Install via: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.js | sh`
+* Ensure you have C++ build tools installed on your OS (MSVC for Windows, GCC for Linux).
 
-Cluster A has 100 wires. 60 go to Cluster B. 20 to C. 20 to D.
-- `Attention(A→B) = 0.6` → place B next to A
-- `Attention(A→C) = 0.2` → C can be farther
-- `Attention(A→D) = 0.2` → D can be farther
+### 2. Run the Verification Script
+We provide a simple Python script to automatically compile the engine, run the unit tests, and execute a full end-to-end placement on a test circuit.
 
-One formula. No neural network. Just counting wires.
-
-## How Placement Works (Top to Bottom)
-- **Level 0**: Place 500 clusters on chip (using attention scores)
-- **Level 1**: Place subclusters inside each cluster (using attention)
-- **Level 2**: Place individual gates inside each subcluster (using 2 forces)
-
-At every level, only 2 forces exist:
-- **ATTRACT** — connected things pull together
-- **REPEL** — overlapping things push apart
-
-## How Routing Awareness Works
-Before finalizing placement:
-1. Draw virtual wires between connected gates
-2. Count wire crossings per grid cell
-3. Find overcrowded cells
-4. Move gates out of overcrowded cells
-5. Repeat until no overcrowding
-
-This prevents the #1 real-world placement failure: unroutable designs.
-
-## How Legalization Works
-After placement, gate positions are floating point (x=100.3, y=55.7). Real chips need integer grid positions with no overlaps.
-
-**Z3 solver:**
-- **Input:** floating point positions
-- **Constraints:** integer grid, no overlaps, within boundaries, row-aligned
-- **Objective:** minimize movement from original positions
-- **Output:** legal placement
-
-## File Structure
-```text
-fluxion-v4/
-├── src/                          # Rust core
-│   ├── parser/                   # Read BLIF, DEF, Bookshelf
-│   ├── algorithm/
-│   │   ├── partitioner.rs        # Build hierarchy tree
-│   │   ├── attention.rs          # Score cluster connections
-│   │   ├── placer.rs             # Multi-level placement
-│   │   ├── congestion.rs         # Routing prediction
-│   │   └── refiner.rs            # Congestion-aware refinement
-│   ├── gpu/
-│   │   ├── context.rs            # WebGPU init (any GPU)
-│   │   ├── buffers.rs            # GPU memory management
-│   │   └── dispatch.rs           # Run shaders
-│   ├── data/
-│   │   ├── circuit.rs            # Gate, Net, Pin structs
-│   │   ├── hierarchy.rs          # Cluster tree
-│   │   ├── placement.rs          # Result struct
-│   │   └── grid.rs               # Routing grid
-│   ├── config.rs                 # Load YAML config
-│   ├── lib.rs                    # Public API
-│   └── main.rs                   # CLI entry
-│
-├── shaders/                      # GPU shaders (WGSL)
-│   ├── forces.wgsl               # Attract + Repel
-│   ├── congestion.wgsl           # Wire crossing count
-│   └── sort.wgsl                 # Parallel sort
-│
-├── python/                       # Python wrapper
-│   ├── fluxion/
-│   │   ├── engine.py             # API (calls Rust via PyO3)
-│   │   ├── legalizer.py          # Z3 legalization
-│   │   └── visualizer.py         # Draw placement
-│   └── cli.py                    # Command line interface
-│
-├── config/
-│   └── default.yaml              # All parameters
-│
-├── Cargo.toml
-├── pyproject.toml
-└── README.md
-```
-
-## Cloud GPU Execution (Kaggle / Colab)
-Because FLUXION v4 uses WebGPU (`wgpu`), it runs natively on cloud Linux instances via Vulkan without any CUDA setup.
-
-You can easily run benchmarks and tests on a **Kaggle** or **Google Colab** notebook.
-1. Upload the repository or `notebooks/kaggle_quickstart.ipynb` to Kaggle/Colab.
-2. Run the cells to automatically install Rust and compile the engine.
-
-### Running Benchmarks
-To run the engine against official ISPD/ICCAD benchmarks, use the included Python script:
 ```bash
-python benchmarks/run_benchmarks.py --circuit benchmarks/ispd2005/adaptec1.def
+# From the project root
+python run_tests.py
 ```
 
-### Running the Test Suite
-To verify the engine end-to-end:
+### 3. Run Benchmarks manually
+To run the engine against a specific ISPD/ICCAD benchmark file:
+
 ```bash
-# Rust Unit Tests
-cargo test
-
-# Python Integration Tests
-pytest tests/test_integration.py
+python benchmarks/run_benchmarks.py --circuit tests/fixtures/small.blif
 ```
-
