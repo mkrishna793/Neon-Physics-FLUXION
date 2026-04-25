@@ -2,7 +2,7 @@
 
 ![FLUXION](https://img.shields.io/badge/FLUXION-v4-blue) ![HAPR](https://img.shields.io/badge/Algorithm-HAPR-orange) ![WebGPU](https://img.shields.io/badge/Compute-WebGPU-brightgreen)
 
-A massive-scale, high-performance chip placement engine. FLUXION takes a raw circuit file, calculates the optimal physical location for every logic gate on a silicon chip to minimize wire length and congestion, and outputs the final placement coordinates.
+A massive-scale, high-performance chip placement engine. FLUXION takes a raw circuit file, calculates the optimal physical location for every logic gate on a silicon chip to minimize wire length and congestion, and outputs the final placement coordinates.    you can open the main github of this HAPR Fluxion :- https://github.com/mkrishna793/Neon-FLUXION.git
 
 It is built to compete with commercial EDA physical synthesis tools (like Cadence Innovus and Synopsys ICC2) through modern algorithms and hardware-agnostic GPU acceleration.
 
