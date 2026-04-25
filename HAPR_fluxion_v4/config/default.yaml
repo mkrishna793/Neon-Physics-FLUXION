@@ -1,0 +1,53 @@
+# FLUXION v4 — HAPR Configuration
+# All tunable parameters in one place.
+
+# ─── Input/Output ───
+input: ""                     # circuit file path (BLIF/DEF/Bookshelf)
+output: "placed.def"          # output DEF file path
+format: "auto"                # auto, blif, def, bookshelf
+
+# ─── Hierarchy ───
+partitioning:
+  max_leaf_size: 64           # gates per leaf cluster
+  min_cluster_size: 8         # don't split below this
+  balance_factor: 0.4         # min child size = 40% of parent
+  method: "spectral"          # spectral, fennel, or hmetis
+
+# ─── Attention ───
+attention:
+  top_k: 10                   # only track top-K attended clusters
+  decay: 0.9                  # attention decay across levels
+
+# ─── Placement ───
+placement:
+  force_iterations: 50        # force steps per leaf cluster
+  attract_weight: 1.0         # attractive force strength
+  repel_weight: 0.5           # repulsive force strength
+  damping: 0.9                # velocity damping factor
+  dt: 0.1                     # time step
+  embed_method: "laplacian"   # laplacian, or random
+
+# ─── Congestion ───
+congestion:
+  grid_cols: 256              # routing grid resolution
+  grid_rows: 256
+  overflow_threshold: 1.0     # cell is "hot" if congestion > capacity
+  refinement_iterations: 100
+  move_distance: 5.0          # max gate move per refinement step
+
+# ─── Legalization ───
+legalization:
+  method: "greedy"            # z3, greedy, or hybrid
+  timeout_seconds: 300        # Z3 solver timeout
+  region_size: 1000           # legalize in chunks of N gates
+
+# ─── GPU ───
+gpu:
+  enabled: true               # false = CPU-only mode
+  workgroup_size: 256         # GPU thread block size
+
+# ─── Logging ───
+logging:
+  level: "info"               # debug, info, warn, error
+  progress: true              # show progress bar
+  metrics_per_level: true     # print wirelength after each level

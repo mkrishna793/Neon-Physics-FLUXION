@@ -1,0 +1,10 @@
+.model small_circuit
+.inputs a b c d
+.outputs y z
+
+.gate AND2 a=a b=b O=n1
+.gate OR2 a=c b=d O=n2
+.gate XOR2 a=n1 b=n2 O=y
+.gate INV a=n2 O=z
+
+.end

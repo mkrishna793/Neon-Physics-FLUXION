@@ -1,0 +1,20 @@
+[build-system]
+requires = ["maturin>=1.4"]
+build-backend = "maturin"
+
+[project]
+name = "fluxion"
+version = "4.0.0"
+description = "FLUXION v4 — HAPR: Hierarchical Attention Placement with Routing"
+license = { text = "MIT" }
+authors = [{ name = "N. Mohana Krishna" }]
+requires-python = ">=3.9"
+dependencies = [
+    "z3-solver>=4.12",
+    "numpy>=1.24",
+    "matplotlib>=3.7",
+    "pyyaml>=6.0",
+]
+
+[tool.maturin]
+features = ["python"]
